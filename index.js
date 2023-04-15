@@ -12,7 +12,7 @@ const JWT_KEY = '.....';
 // => Connection folder
 const { connSql } = require("./sequelize");
 const sequelize = connSql();
-// => Endonnection folder
+// => Endc connection folder
 
 // => test connect
 const conn = connSql();
