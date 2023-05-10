@@ -62,6 +62,7 @@ CREATE TABLE `developers` (
 CREATE TABLE `groups` (
   `group_id` varchar(64) NOT NULL,
   `developer_id` varchar(64) NOT NULL,
+  `user_id` varchar(64) NOT NULL,
   `group_name` varchar(64) NOT NULL,
   `group_description` text DEFAULT NULL,
   `profil_picture` text DEFAULT NULL,
@@ -88,6 +89,7 @@ CREATE TABLE `group_members` (
 CREATE TABLE `posts` (
   `post_id` varchar(64) NOT NULL,
   `thread_id` varchar(64) NOT NULL,
+  `user_id` varchar(64) NOT NULL,
   `post_name` varchar(64) NOT NULL,
   `post_description` text DEFAULT NULL,
   `post_image` text DEFAULT NULL,
@@ -106,6 +108,7 @@ CREATE TABLE `posts` (
 CREATE TABLE `threads` (
   `thread_id` varchar(64) NOT NULL,
   `group_id` varchar(64) NOT NULL,
+  `user_id` varchar(64) NOT NULL,
   `thread_name` varchar(64) NOT NULL,
   `thread_description` text DEFAULT NULL,
   `created_at` date NOT NULL
