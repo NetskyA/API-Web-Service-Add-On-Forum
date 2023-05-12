@@ -58,7 +58,7 @@ app.post("/api/developers/register", async (req, res) => {
         result = await db.Developers.findAll();
         let id = formatname + (parseInt(result.length) + 1).toString().padStart(3, "0");
         let nohp = formatnumber + phone;
-        await db.Developers.create({ developer_id: id, username: username, email: email, password: password, phone: nohp,saldo,api_hit,status})
+        await db.Developers.create({ developer_id: id, username: username, email: email, password: password, phone: nohp,})
         return res.status(201).send({ body: { "ID User": id, "Display name": username, Email: email, "No Handphone": nohp,"saldo":saldo,"Api Hit":api_hit} })
     }
 });
