@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // => All function
 const cek_user = async (username) => {
-    let cari = await Developers.findOne({ where: { username: username } })
+    let cari = await db.Developers.findOne({ where: { username: username } })
     if (cari) {
         throw new Error("username already been taken");
     }
@@ -32,6 +32,7 @@ const cek_user = async (username) => {
 // => End all function
 
 //Developer =========================================
+//No 1
 app.post("/api/developers/register", async (req, res) => {
     let { username, email, password, phone } = req.body;
     let hasUppercase = /[A-Z]/.test(password);
@@ -58,7 +59,36 @@ app.post("/api/developers/register", async (req, res) => {
         result = await db.Developers.findAll();
         let id = formatname + (parseInt(result.length) + 1).toString().padStart(3, "0");
         let nohp = formatnumber + phone;
-        await db.Developers.create({ developer_id: id, username: username, email: email, password: password, phone: nohp,})
-        return res.status(201).send({ body: { "ID User": id, "Display name": username, Email: email, "No Handphone": nohp,"saldo":saldo,"Api Hit":api_hit} })
+        await db.Developers.create({ developer_id: id, username: username, email: email, password: password, phone: nohp, })
+        return res.status(201).send({ body: { "ID User": id, "Display name": username, Email: email, "No Handphone": nohp, "Saldo": 0, "Api Hit": 0 } })
     }
 });
+
+//No 2
+// app.post("/api/developers/login", async (req, res) => {
+//     let { email, password } = req.body;
+//     let searchname = await query(
+//         `SELECT * FROM developers WHERE email = ?`,
+//         {
+//             type: QueryTypes.SELECT,
+//             replacements: [email]
+//         }
+//     )
+//     let searchpass = await sequelize.query(
+//         `SELECT * FROM developers WHERE password = ?`,
+//         {
+//             type: QueryTypes.SELECT,
+//             replacements: [password]
+//         }
+//     )
+//     if (searchname.length == 0) {
+//         return res.status(400).send({ msg: { body: "username not found" } })
+//     } else if (searchpass.length == 0) {
+//         return res.status(400).send({ msg: { body: "password not match" } })
+//     } else {
+//         let token = jwt.sign({
+//             developer_id:developer_id
+//         }, JWT_KEY,)
+//         return res.status(200).send({ "Token Activ": token })
+//     }
+// });
