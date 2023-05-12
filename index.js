@@ -10,28 +10,17 @@ const JWT_KEY = '.....';
 // => End all library connection
 
 // => Connection folder
-const { connSql } = require("./sequelize");
-const sequelize = connSql();
-// => Endc connection folder
+const db = require("./src/models")
 
-// => test connect
-const conn = connSql();
 const port = 3000;
-const initApp = async () => {
-    console.log("Testing database connection");
-    try {
-        await conn.authenticate();
-        console.log("Successfully connected!");
-        app.listen(port, () => console.log(`App listening on port ${port}!`));
-    } catch (error) {
-        console.error("Failure database connection : ", error.original);
-    }
-}
-initApp();
+app.listen(port, function () {
+    console.log(`listening on port ${port}`);
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // => End test connect
 
 // => All function
+
 
 // => End all function

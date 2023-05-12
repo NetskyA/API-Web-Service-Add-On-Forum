@@ -36,20 +36,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull:false
     },
     saldo: {
-      TYPE:DataTypes.INTEGER,
+      type:DataTypes.INTEGER,
       defaultValue:0,
       allowNull:false
     },
     api_hit: {
-      TYPE:DataTypes.INTEGER,
+      type:DataTypes.INTEGER,
       defaultValue:0,
     },
-    api_key: {
-      type:DataTypes.TEXT,
-      allowNull:false
-    },
     status:  {
-      TYPE:DataTypes.INTEGER,
+      type:DataTypes.INTEGER,
       defaultValue:0
     },
   }, {

@@ -32,10 +32,6 @@ module.exports = {
         type: Sequelize.INTEGER,
         defaultValue:0
       },
-      api_key: {
-        type: Sequelize.TEXT,
-        allowNull:false
-      },
       status: {
         type: Sequelize.INTEGER,
         defaultValue:0
