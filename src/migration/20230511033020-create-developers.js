@@ -6,7 +6,7 @@ module.exports = {
       developer_id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.STRING
       },
       username: {
         type: Sequelize.STRING,

@@ -14,44 +14,45 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Developers.init({
-    developer_id:{
-      type:DataTypes.STRING,
-      primaryKey:true,
-      allowNull:false
+    developer_id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false
     },
     username: {
-      type:DataTypes.STRING,
-      allowNull:false
+      type: DataTypes.STRING,
+      allowNull: false
     },
     email: {
-      type:DataTypes.STRING,
-      allowNull:false
+      type: DataTypes.STRING,
+      allowNull: false
     },
     password: {
-      type:DataTypes.STRING,
-      allowNull:false
+      type: DataTypes.STRING,
+      allowNull: false
     },
     phone: {
-      type:DataTypes.STRING,
-      allowNull:false
+      type: DataTypes.STRING,
+      allowNull: false
     },
     saldo: {
-      type:DataTypes.INTEGER,
-      defaultValue:0,
-      allowNull:false
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      allowNull: false
     },
     api_hit: {
-      type:DataTypes.INTEGER,
-      defaultValue:0,
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
     },
-    status:  {
-      type:DataTypes.INTEGER,
-      defaultValue:0
+    status: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
     },
   }, {
     sequelize,
     modelName: 'Developers',
-    tableName: 'developers'
+    tableName: 'developers',
+    timestamps: false
   });
   return Developers;
 };
