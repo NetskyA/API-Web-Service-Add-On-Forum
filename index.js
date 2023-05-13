@@ -10,7 +10,8 @@ const JWT_KEY = '.....';
 // => End all library connection
 
 // => Connection folder
-const db = require("./src/models")
+const db = require("./src/models");
+const developers = require("./src/models/developers");
 
 const port = 3000;
 app.listen(port, function () {
@@ -65,30 +66,32 @@ app.post("/api/developers/register", async (req, res) => {
 });
 
 //No 2
-// app.post("/api/developers/login", async (req, res) => {
-//     let { email, password } = req.body;
-//     let searchname = await query(
-//         `SELECT * FROM developers WHERE email = ?`,
-//         {
-//             type: QueryTypes.SELECT,
-//             replacements: [email]
-//         }
-//     )
-//     let searchpass = await sequelize.query(
-//         `SELECT * FROM developers WHERE password = ?`,
-//         {
-//             type: QueryTypes.SELECT,
-//             replacements: [password]
-//         }
-//     )
-//     if (searchname.length == 0) {
-//         return res.status(400).send({ msg: { body: "username not found" } })
-//     } else if (searchpass.length == 0) {
-//         return res.status(400).send({ msg: { body: "password not match" } })
-//     } else {
-//         let token = jwt.sign({
-//             developer_id:developer_id
-//         }, JWT_KEY,)
-//         return res.status(200).send({ "Token Activ": token })
-//     }
-// });
+async function searchDeveloperByEmail(email) {
+    const developer1 = await db.Developer.findOne({
+        where: {
+            email: email
+        }
+    });
+    return developer1;
+}
+async function searchDeveloperByPassword(password) {
+    const developers = await db.Developer.findOn({
+        where: {
+            password: password
+        }
+    });
+    return developers;
+}
+app.post("/api/developers/login", async (req, res) => {
+    let { email, password } = req.body;
+    
+    if (!searchDeveloperByEmail==email) {
+        return res.status(400).send({ msg: { body: "email not found" } })
+    } else if (!searchDeveloperByPassword==password) {
+        return res.status(400).send({ msg: { body: "password not match" } })
+    } else {
+        let developer_id =developers
+        let token = jwt.sign({ developer_id:email }, JWT_KEY)
+        return res.status(200).send({ "Developer": email, "Token Activ": token })
+    }
+});
