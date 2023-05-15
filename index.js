@@ -12,6 +12,7 @@ const JWT_KEY = '.....';
 // => Connection folder
 const db = require("./src/models");
 const developers = require("./src/models/developers");
+const group_members = require("./src/models/group_members");
 
 const port = 3000;
 app.listen(port, function () {
@@ -28,6 +29,13 @@ const cek_user = async (username) => {
         throw new Error("username already been taken");
     }
     return username;
+}
+const cek_develop = async (group_id) => {
+    let cari = await db.Groups.findOne({ where: { group_id: group_id } })
+    if (!cari) {
+        throw new Error("Group not found!");
+    }
+    return group_id;
 }
 
 // => End all function
@@ -138,6 +146,88 @@ app.post("/api/developers/topup", async (req, res) => {
     const developer = await db.Developers.findByPk(validation_token.developer_id);
     let sum_saldo = (parseInt(developer.saldo)) + (parseInt(saldo));
     await db.Developers.update({ saldo: sum_saldo }, { where: { developer_id: validation_token.developer_id } })
-
     return res.status(201).send({ "Saldo": sum_saldo })
+});
+
+//NO 4
+app.post("/api/developers/recharge", async (req, res) => {
+    let { api_hit } = req.body;
+    let token = req.header('x-auth-token');
+    if (!req.header('x-auth-token')) {
+        return res.status(403).send({ "msg": "Authentication required" })
+    }
+    try {
+        validation_token = jwt.verify(token, JWT_KEY)
+    } catch (err) {
+        return res.status(400).send({ "msg": "Invalid JWT Key" })
+    }
+    const validateData = Joi.object({
+        api_hit: Joi.string().required().messages({ "string.empty": "Please input api hit", "any.required": "check value", }),
+    })
+    try {
+        await validateData.validateAsync(req.body)
+    } catch (error) {
+        return res.status(400).send(error.toString())
+    }
+    const developer = await db.Developers.findByPk(validation_token.developer_id);
+
+    if (api_hit * 5 > parseInt(developer.saldo)) {
+        return res.status(400).send({ "msg": "Insufficient balance amount" })
+    }
+    let sum_api_hit = (parseInt(developer.api_hit)) + (parseInt(api_hit));
+    let count_balance =  (parseInt(developer.saldo)) - ((parseInt(api_hit)*5));
+    await db.Developers.update({ api_hit : sum_api_hit, saldo:count_balance }, { where: { developer_id: validation_token.developer_id } })
+    return res.status(201).send({ "Total Api Hit": sum_api_hit, "Balance Count":count_balance });
+});
+
+//NO 5
+app.post("/api/developers/add/user", async (req, res) => {
+    let { group_id ,user_id } = req.body;
+    let token = req.header('x-auth-token');
+    if (!req.header('x-auth-token')) {
+        return res.status(403).send({ "msg": "Authentication required" })
+    }
+    try {
+        validation_token = jwt.verify(token, JWT_KEY)
+    } catch (err) {
+        return res.status(400).send({ "msg": "Invalid JWT Key" })
+    }
+    const validateData = Joi.object({
+        group_id: Joi.string().required().external(cek_develop).messages({ "string.empty": "something wrong Please check again", "any.required": "Please check value" }),
+        user_id : Joi.string().required().messages({ "string.empty": "Please input user id", "any.required": "check value", }),
+    })
+    try {
+        await validateData.validateAsync(req.body)
+    } catch (error) {
+        return res.status(400).send(error.toString())
+    }
+
+    const cek_dev = await db.Groups.findOne({
+        where: {
+            group_id: group_id,
+            developer_id: validation_token.developer_id
+        }
+    })
+
+    if (!cek_dev) {
+        return res.status(401).send({
+            msg: "developers don't have access"
+        })
+    }
+
+    const cekKembar = await db.Group_members.findOne({
+        where: {
+            group_id: group_id,
+            user_id: user_id
+        }
+    })
+    
+
+    if (cekKembar) {
+        return res.status(401).send({
+            msg: "User id already registered!"
+        })
+    }
+    await db.Group_members.create({ group_id:group_id,user_id:user_id },)
+    return res.status(201).send({ msg: "User already join to group","Group Id": group_id, "User Id":user_id });
 });
