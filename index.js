@@ -102,8 +102,10 @@ app.post("/api/developers/login", async (req, res) => {
         })
     }
 
-    let developer_id = developers
-    let token = jwt.sign({ developer_id: developers.developer_id }, JWT_KEY)
+    // let developer_id = developers;
+    // return res.status(200).send(developer.developer_id)
+
+    let token = jwt.sign({ developer_id: developer.developer_id }, JWT_KEY)
     return res.status(200).send({ "Developer": email, "Token Activ": token })
 
 });
@@ -111,21 +113,31 @@ app.post("/api/developers/login", async (req, res) => {
 //NO 3
 app.post("/api/developers/topup", async (req, res) => {
     let { saldo } = req.body;
-    let token = req.header('x-auth-token')
+    let token = req.header('x-auth-token');
     if (!req.header('x-auth-token')) {
         return res.status(403).send({ "msg": "Authentication required" })
     }
     try {
-        temps_data_usr = jwt.verify(token, JWT_KEY)
+        validation_token = jwt.verify(token, JWT_KEY)
     } catch (err) {
         return res.status(400).send({ "msg": "Invalid JWT Key" })
     }
 
-    if (saldo < 1) {
-        return res.status(404).send({ msg: "Minimal Top Up 1" })
-    } else {
-        // await db.Developera.reload();
-        await db.Developers.update({ saldo:saldo })
-        return res.status(201).send({ body: { "Saldo":saldo } })
+    const validateData = Joi.object({
+        saldo: Joi.string().required().messages({ "string.empty": "Please input saldo", "any.required": "check value", }),
+    })
+    try {
+        await validateData.validateAsync(req.body)
+    } catch (error) {
+        return res.status(400).send(error.toString())
     }
+
+    if (parseInt(saldo) < 1) {
+        return res.status(404).send({ msg: "Minimal " })
+    }
+    const developer = await db.Developers.findByPk(validation_token.developer_id);
+    let sum_saldo = (parseInt(developer.saldo)) + (parseInt(saldo));
+    await db.Developers.update({ saldo: sum_saldo }, { where: { developer_id: validation_token.developer_id } })
+
+    return res.status(201).send({ "Saldo": sum_saldo })
 });
