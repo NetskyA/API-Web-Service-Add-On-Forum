@@ -49,7 +49,7 @@ app.post("/api/developers/register", async (req, res) => {
     try {
         await validateData.validateAsync(req.body)
     } catch (error) {
-        res.status(400).send(error.toString())
+        return res.status(400).send(error.toString())
     }
     if (!password || password.length < 5) {
         return res.status(400).send("Password harus memiliki minimal 5 karakter");
@@ -65,33 +65,67 @@ app.post("/api/developers/register", async (req, res) => {
     }
 });
 
-//No 2
-async function searchDeveloperByEmail(email) {
-    const developer1 = await db.Developer.findOne({
-        where: {
-            email: email
-        }
-    });
-    return developer1;
-}
-async function searchDeveloperByPassword(password) {
-    const developers = await db.Developer.findOn({
-        where: {
-            password: password
-        }
-    });
-    return developers;
-}
+//NO 2
 app.post("/api/developers/login", async (req, res) => {
     let { email, password } = req.body;
-    
-    if (!searchDeveloperByEmail==email) {
-        return res.status(400).send({ msg: { body: "email not found" } })
-    } else if (!searchDeveloperByPassword==password) {
-        return res.status(400).send({ msg: { body: "password not match" } })
+    const validateData = Joi.object({
+        email: Joi.string().email().required().messages({ "string.empty": "Please input email", "any.required": "check value", "string.email": "Please input email" }),
+        password: Joi.string().required().messages({ "string.empty": "check value password", "any.required": "check value" }),
+    })
+    try {
+        await validateData.validateAsync(req.body)
+    } catch (error) {
+        return res.status(400).send(error.toString())
+    }
+
+    const cekEmailDeveloper = await db.Developers.findOne({
+        where: {
+            email: email,
+        }
+    })
+    if (!cekEmailDeveloper) {
+        return res.status(404).send({
+            msg: "Email not found!"
+        })
+    }
+
+    const developer = await db.Developers.findOne({
+        where: {
+            email: email,
+            password: password
+        }
+    })
+
+    if (!developer) {
+        return res.status(404).send({
+            msg: "Wrong password!"
+        })
+    }
+
+    let developer_id = developers
+    let token = jwt.sign({ developer_id: developers.developer_id }, JWT_KEY)
+    return res.status(200).send({ "Developer": email, "Token Activ": token })
+
+});
+
+//NO 3
+app.post("/api/developers/topup", async (req, res) => {
+    let { saldo } = req.body;
+    let token = req.header('x-auth-token')
+    if (!req.header('x-auth-token')) {
+        return res.status(403).send({ "msg": "Authentication required" })
+    }
+    try {
+        temps_data_usr = jwt.verify(token, JWT_KEY)
+    } catch (err) {
+        return res.status(400).send({ "msg": "Invalid JWT Key" })
+    }
+
+    if (saldo < 1) {
+        return res.status(404).send({ msg: "Minimal Top Up 1" })
     } else {
-        let developer_id =developers
-        let token = jwt.sign({ developer_id:email }, JWT_KEY)
-        return res.status(200).send({ "Developer": email, "Token Activ": token })
+        // await db.Developera.reload();
+        await db.Developers.update({ saldo:saldo })
+        return res.status(201).send({ body: { "Saldo":saldo } })
     }
 });
