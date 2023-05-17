@@ -315,7 +315,6 @@ app.get("/api/developers/groupuser/:group_id", async function (req, res) {
 });
 
 //Group =========================================
-// DONE TINGGAL CEK ULANG + TAMBAIN THIRD PARTY API, BIAYA API HIT TIAP ENDPOINT MASIH BELUM
 // NO 1 (FIKO)
 app.post("/api/group", uploadImage.single("profile_picture"), async function (req, res) {
 	let { group_name, group_description, user_id } = req.body;
@@ -345,6 +344,25 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
 			msg: "User_id cannot be empty!",
 		});
 	}
+
+    const options = {
+		method: "POST",
+		url: "https://openai80.p.rapidapi.com/moderations",
+		headers: {
+			"content-type": "application/json",
+			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
+			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
+			"Accept-Encoding": "*",
+		},
+		data: {
+			input: [group_name, group_description],
+			model: "text-moderation-latest",
+		},
+	};
+
+	let result = await axios.request(options);
+	if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Group_name contains offensive word" });
+	if (result.data.results[1].flagged === true) return res.status(401).send({ msg: "Group_description contains offensive word" });
 
 	const groups = await db.Groups.findAll();
 	let group_id;
@@ -445,10 +463,31 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
 		user_id = cekGroupId.user_id;
 	}
 
+    const options = {
+		method: "POST",
+		url: "https://openai80.p.rapidapi.com/moderations",
+		headers: {
+			"content-type": "application/json",
+			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
+			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
+			"Accept-Encoding": "*",
+		},
+		data: {
+			input: [group_name, group_description],
+			model: "text-moderation-latest",
+		},
+	};
+
+	let result = await axios.request(options);
+	if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Group_name contains offensive word" });
+	if (result.data.results[1].flagged === true) return res.status(401).send({ msg: "Group_description contains offensive word" });
+
 	let profile_picture = cekGroupId.profile_picture;
 
 	if (req.file) {
-		fs.unlinkSync(`./uploads/${group_id}.png`);
+        if(profile_picture!="-"){
+            fs.unlinkSync(`./uploads/${group_id}.png`);
+        }
 		fs.renameSync(`./uploads/${req.file.filename}`, `./uploads/${group_id}.png`);
 		profile_picture = `./uploads/${group_id}.png`;
 	}
