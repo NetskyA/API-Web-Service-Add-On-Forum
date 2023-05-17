@@ -8,6 +8,7 @@ const Joi = require('joi').extend(require('@joi/date'))
 const jwt = require("jsonwebtoken");
 const JWT_KEY = '.....';
 const fs = require("fs");
+const axios = require("axios");
 const multer = require("multer");
 const uploadImage = multer({
     dest: "./uploads",
@@ -17,6 +18,9 @@ const uploadImage = multer({
         }
         cb(null, true);
     },
+});
+const uploadFile = multer({
+    dest: "./uploads",
 });
 app.use("/uploads", express.static("uploads"))
 // => End all library connection
@@ -330,7 +334,7 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
     }
     let profile_picture = "-";
 
-    if (!group_name) {
+    if (!group_name) { 
         return res.status(401).send({
             msg: "Group_name cannot be empty!"
         })
@@ -341,7 +345,7 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
         })
     }
 
-    const groups = await db.Groups.findAll();
+    const groups = await db.Groups.findAll(); 
     let group_id;
     if (groups.length == 0) {
         group_id = "GRP" + (parseInt(groups.length) + 1).toString().padStart(3, "0");
@@ -574,7 +578,311 @@ app.get("/api/group/:group_id", async function (req, res) {
 
 
 //Post =========================================
-// MASIH BELUM
+
+
+app.post("/api/post",uploadFile.single("post_file"),async(req,res)=>{
+    let {thread_id,user_id,post_name,post_description} = req.body;
+
+    let token = req.header('x-auth-token');
+    if (!req.header('x-auth-token')) {
+        return res.status(403).send({ "msg": "Authentication required" })
+    }
+    try {
+        validation_token = jwt.verify(token, JWT_KEY)
+    } catch (err) {
+        return res.status(400).send({ "msg": "Invalid JWT Key" })
+    }
+
+    if(!thread_id) return res.status(401).send({msg: "Thread_id cannot be empty!"})
+    
+    let thread = await db.Threads.findByPk(thread_id);
+    if(!thread)  return res.status(404).send({msg: "Thread_id not found!"})
+    let cekGroup = await db.Groups.findByPk(thread.group_id);
+    if(cekGroup.developer_id!==validation_token.developer_id) return res.status(404).send({msg: "Developer cannot create this post!"})
+    let member = await db.Group_members.findOne({
+        where:{
+            group_id: cekGroup.group_id,
+            user_id: user_id
+        }
+    });
+    if(!member) return res.status(404).send({msg: "User cannot create this post!"})
+    if(!post_name)return res.status(401).send({msg: "Post_name cannot be empty!"})
+
+    let jml = await db.Posts.findAndCountAll()
+    let id = "POS" + (parseInt(jml.count) + 1).toString().padStart(3, "0");
+    
+
+    let file = "";
+    if (!post_description) post_description = "-"
+    if (req.file) {
+        let temp = req.file.originalname.split(".")
+        const oldExt = temp[temp.length - 1];
+        const filename = `${id}.${oldExt}`;
+        fs.renameSync(
+            `./uploads/${req.file.filename}`,
+            `./uploads/${filename}`
+        );
+       file = `./uploads/${filename}`;
+    }
+    const options = {
+        method: 'POST',
+        url: 'https://openai80.p.rapidapi.com/moderations',
+        headers: {
+          'content-type': 'application/json',
+          'X-RapidAPI-Key': '38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f',
+          'X-RapidAPI-Host': 'openai80.p.rapidapi.com',
+          'Accept-Encoding': '*'
+        },
+        data: {
+          input: [post_name,post_description],
+          model: 'text-moderation-latest'
+        }
+      };
+      
+    let result = await axios.request(options);
+    if(result.data.results[0].flagged===true) return res.status(401).send({msg: "Post_name contains offensive word"})
+    if(result.data.results[1].flagged===true) return res.status(401).send({msg: "Post_description contains offensive word"})
+
+    var now = new Date();
+    var hour = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0") + ":" + now.getSeconds().toString().padStart(2, "0");
+    var date = now.getFullYear().toString().padStart(4, "0") + '-' + (now.getMonth() + 1).toString().padStart(2, "0") + '-' + now.getDate().toString().padStart(2, "0");
+    var fullDate = date + ' ' + hour;
+
+    await db.Posts.create({
+        post_id: id,
+        thread_id:thread_id,
+        user_id: user_id,
+        post_name: post_name,
+        post_description: post_description,
+        post_image: file,
+        created_at: fullDate
+    });
+
+    return res.status(201).send({
+        post_id:id,
+        post_name:post_name,
+        post_description:post_description,
+        link_post_file:file,
+        views:0,
+        like:{},
+        dislike:{},
+        created_at:fullDate
+    })
+})
+
+app.put("/api/post/:post_id",uploadFile.single("post_file"),async(req,res)=>{
+    let {user_id,post_name,post_description,action} = req.body;
+    let {post_id} = req.params;
+    let token = req.header('x-auth-token');
+    if (!req.header('x-auth-token')) {
+        return res.status(403).send({ "msg": "Authentication required" })
+    }
+    try {
+        validation_token = jwt.verify(token, JWT_KEY)
+    } catch (err) {
+        return res.status(400).send({ "msg": "Invalid JWT Key" })
+    }
+
+    if(!post_id) return res.status(401).send({msg: "Post_id cannot be empty!"})
+    
+    let post = await db.Posts.findByPk(post_id);
+    if(!post)  return res.status(404).send({msg: "Post_id not found!"})
+
+    let thread = await db.Threads.findByPk(post.thread_id);
+    let cekGroup = await db.Groups.findByPk(thread.group_id);
+    if(!user_id) user_id = post.user_id;
+    if(cekGroup.developer_id!==validation_token.developer_id) return res.status(404).send({msg: "Developer cannot edit this post!"})
+    let member = await db.Group_members.findOne({
+        where:{
+            group_id: cekGroup.group_id,
+            user_id: user_id
+        }
+    });
+    if(!member) return res.status(404).send({msg: "User cannot create this post!"});
+
+    if (!post_description && !req.file && !post_name && !action) return res.status(401).send({msg: "At least 1 field must be filled!"});
+    if(post_name=="") return res.status(401).send({msg: "Post_name cannot be empty string!"})
+    cek = []
+    if(post_description) cek.push(post_description);
+    if(post_name) cek.push(post_name);
+    if(post_name || post_description){
+        const options = {
+            method: 'POST',
+            url: 'https://openai80.p.rapidapi.com/moderations',
+            headers: {
+              'content-type': 'application/json',
+              'X-RapidAPI-Key': '38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f',
+              'X-RapidAPI-Host': 'openai80.p.rapidapi.com',
+              'Accept-Encoding': '*'
+            },
+            data: {
+              input: cek,
+              model: 'text-moderation-latest'
+            }
+          };
+          
+        let result = await axios.request(options);
+        if(result.data.results[0].flagged===true) return res.status(401).send({msg: "Post_name contains offensive word"})
+        if(result.data.results.length>1){
+            if(result.data.results[1].flagged===true) return res.status(401).send({msg: "Post_name contains offensive word"})
+        }
+    }
+    if (post_description) post.set({post_description:post_description});
+    if (post_name) post.set({post_name:post_name});
+    post.set({user_id:user_id});
+
+    if(action && (action!= "like" && action !="dislike")) return res.status(401).send({msg: "Invalid Action"})
+    let prevLike = JSON.parse(post.likes);
+    if (!prevLike) prevLike = []
+
+    let prevDislike = JSON.parse(post.dislikes);
+    if (!prevDislike) prevDislike = [];
+
+    let temp="";
+    let idxLike = prevLike.indexOf(user_id);
+    let idxDislike = prevDislike.indexOf(user_id);
+    if (action && idxLike!=-1) {
+        temp = "You've unlike the post"
+        prevLike.splice(idxLike,1);
+        if(action=="dislike") temp="";
+    } else if(action && idxDislike!=-1){
+        temp = "You've undislike the post"
+        prevDislike.splice(idxDislike,1);
+        if(action=="like") temp="";
+    }
+
+    if(action && temp==""){
+        if(action=="like"){ 
+            prevLike.push(user_id) 
+            temp = "You've like the post"
+        } else{
+            prevDislike.push(user_id)
+            temp = "You've dislike the post"
+        }
+    }
+    post.set({
+        likes:prevLike,
+        dislikes:prevDislike
+    })
+    if (req.file) {
+        if(post.post_image!="") fs.unlinkSync(`./${post.post_image}`);
+        let temp = req.file.originalname.split(".")
+        const oldExt = temp[temp.length - 1];
+        const filename = `${post.post_id}.${oldExt}`;
+        fs.renameSync(
+            `./uploads/${req.file.filename}`,
+            `./uploads/${filename}`
+        );
+       post.set({post_image:`./uploads/${filename}`});
+    }
+    await post.save();
+    return res.status(200).send({
+        message:(temp!="")?temp:"Success",
+        post_id:post.post_id,
+        user_id:post.user_id,
+        post_name:post.post_name,
+        post_description:post.post_description,
+        link_post_file:post.post_image,
+        like:prevLike,
+        dislike:prevDislike,
+    })
+})
+
+app.delete("/api/post/:post_id",async(req,res)=>{
+    let {post_id} = req.params;
+    let token = req.header('x-auth-token');
+    if (!req.header('x-auth-token')) {
+        return res.status(403).send({ "msg": "Authentication required" })
+    }
+    try {
+        validation_token = jwt.verify(token, JWT_KEY)
+    } catch (err) {
+        return res.status(400).send({ "msg": "Invalid JWT Key" })
+    }
+
+    if(!post_id) return res.status(401).send({msg: "Post_id cannot be empty!"})
+    
+    let post = await db.Posts.findByPk(post_id);
+    if(!post)  return res.status(404).send({msg: "Post_id not found!"})
+    let thread = await db.Threads.findByPk(post.thread_id);
+    let cekGroup = await db.Groups.findByPk(thread.group_id);
+    if(cekGroup.developer_id!==validation_token.developer_id) return res.status(404).send({msg: "Developer cannot delete this post!"})
+    fs.unlinkSync(`./${post.post_image}`);
+    let name = post.post_name
+    await db.Posts.destroy({
+        where: {
+            post_id: post_id
+        }
+    })
+    return res.status(201).send({
+        msg: `Success delete ${name}`
+    })
+})
+
+app.get("/api/post/trending",async(req,res)=>{
+    let token = req.header('x-auth-token');
+    if (!req.header('x-auth-token')) {
+        return res.status(403).send({ "msg": "Authentication required" })
+    }
+    try {
+        validation_token = jwt.verify(token, JWT_KEY)
+    } catch (err) {
+        return res.status(400).send({ "msg": "Invalid JWT Key" })
+    }
+    let data = await db.Posts.findAll({
+        order:[
+            ['views',"DESC"]
+        ]
+    })
+    return res.status(200).send(data)
+})
+
+
+app.get("/api/post/:post_id",async(req,res)=>{
+    let { post_id } = req.params;
+
+    let token = req.header('x-auth-token');
+    if (!req.header('x-auth-token')) {
+        return res.status(403).send({ "msg": "Authentication required" })
+    }
+    try {
+        validation_token = jwt.verify(token, JWT_KEY)
+    } catch (err) {
+        return res.status(400).send({ "msg": "Invalid JWT Key" })
+    }
+
+    if (!post_id) {
+        return res.status(401).send({
+            msg: "Post_id cannot be empty!"
+        })
+    }
+
+    const post = await db.Posts.findByPk(post_id);
+    if (!post) {
+        return res.status(404).send({
+            msg: "Post_id not found!"
+        })
+    }
+    await post.increment({views:1});
+    await post.reload();
+    let prevLike = JSON.parse(post.likes);
+    if (!prevLike) prevLike = []
+
+    let prevDislike = JSON.parse(post.dislikes);
+    if (!prevDislike) prevDislike = [];
+
+    return res.status(201).send({
+        post_id: post_id,
+        user_id: post.user_id,
+        post_name: post.post_name,
+        group_description: post.post_description,
+        link_post_file: post.post_image,
+        views:post.views,
+        likes:prevLike,
+        dislike:prevDislike,
+        created_at: post.created_at
+    });
+})
 
 //Comment =========================================
 // MASIH BELUM
