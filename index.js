@@ -35,7 +35,14 @@ app.use(express.urlencoded({ extended: true }));
 // => End test connect
 
 // => All function
-const cek_user = async (email) => {
+const cek_add_user = async (username) => {
+    let cari = await db.Developers.findOne({ where: { username: username } })
+    if (cari) {
+        throw new Error("Username already been taken");
+    }
+    return username;
+}
+const cek_user_email = async (email) => {
     let cari = await db.Developers.findOne({ where: { email: email } })
     if (cari) {
         throw new Error("Email already been taken");
@@ -67,7 +74,6 @@ const cek_groupname = async (group_name) => {
 // => End all function
 
 //Developer =========================================
-// DONE TINGGAL CEK ULANG (Nomer 1 bisa diganti yang uniq emailnya, username ga perlu uniq gpp, return bahasane sek onk seng indo ndek nomer 1), BIAYA API HIT TIAP ENDPOINT MASIH BELUM
 //NO 1 (ALDI)
 app.post("/api/developers/register", async (req, res) => {
     let { username, email, password, phone } = req.body;
@@ -76,8 +82,8 @@ app.post("/api/developers/register", async (req, res) => {
     let formatname = "DEV";
     let formatnumber = "(021)";
     const validateData = Joi.object({
-        username: Joi.string().required().messages({ "string.empty": "something wrong Please check again", "any.required": "Please check value" }),
-        email: Joi.string().email().required().external(cek_user).messages({ "string.empty": "check value", "any.required": "check value", "string.email": "Invalid email address" }),
+        username: Joi.string().required().external(cek_add_user).messages({ "string.empty": "something wrong Please check again", "any.required": "Please check value" }),
+        email: Joi.string().email().required().external(cek_user_email).messages({ "string.empty": "check value", "any.required": "check value", "string.email": "Invalid email address" }),
         password: Joi.string().required().messages({ "string.empty": "check value", "any.required": "check value" }),
         phone: Joi.string().max(12).min(1).pattern(/^[0-9]+$/).messages({ "any.required": "check value", "string.empty": "check value", "string.pattern.base": "Invalid phone number", "string.max": "Invalid phone number", "string.min": "Invalid phone number" }),
     })
