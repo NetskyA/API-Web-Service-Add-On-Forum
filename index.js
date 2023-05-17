@@ -13,7 +13,7 @@ const uploadImage = multer({
     dest: "./uploads",
     fileFilter: function (req, file, cb) {
         if (file.mimetype != "image/png" && file.mimetype != "image/jpeg") {
-          return cb(new Error("Wrong file type"), null);
+            return cb(new Error("Wrong file type"), null);
         }
         cb(null, true);
     },
@@ -35,12 +35,12 @@ app.use(express.urlencoded({ extended: true }));
 // => End test connect
 
 // => All function
-const cek_user = async (username) => {
-    let cari = await db.Developers.findOne({ where: { username: username } })
+const cek_user = async (email) => {
+    let cari = await db.Developers.findOne({ where: { email: email } })
     if (cari) {
-        throw new Error("username already been taken");
+        throw new Error("Email already been taken");
     }
-    return username;
+    return email;
 }
 const cek_develop = async (group_id) => {
     let cari = await db.Groups.findOne({ where: { group_id: group_id } })
@@ -53,9 +53,9 @@ const cek_develop = async (group_id) => {
 const cek_groupname = async (group_name) => {
     let find = await db.Groups.findOne(
         {
-            where: { 
-                group_id: group_id 
-            } 
+            where: {
+                group_id: group_id
+            }
         }
     )
     if (find) {
@@ -76,8 +76,8 @@ app.post("/api/developers/register", async (req, res) => {
     let formatname = "DEV";
     let formatnumber = "(021)";
     const validateData = Joi.object({
-        username: Joi.string().required().external(cek_user).messages({ "string.empty": "something wrong Please check again", "any.required": "Please check value" }),
-        email: Joi.string().email().required().messages({ "string.empty": "check value", "any.required": "check value", "string.email": "Invalid email address" }),
+        username: Joi.string().required().messages({ "string.empty": "something wrong Please check again", "any.required": "Please check value" }),
+        email: Joi.string().email().required().external(cek_user).messages({ "string.empty": "check value", "any.required": "check value", "string.email": "Invalid email address" }),
         password: Joi.string().required().messages({ "string.empty": "check value", "any.required": "check value" }),
         phone: Joi.string().max(12).min(1).pattern(/^[0-9]+$/).messages({ "any.required": "check value", "string.empty": "check value", "string.pattern.base": "Invalid phone number", "string.max": "Invalid phone number", "string.min": "Invalid phone number" }),
     })
@@ -87,10 +87,10 @@ app.post("/api/developers/register", async (req, res) => {
         return res.status(400).send(error.toString())
     }
     if (!password || password.length < 5) {
-        return res.status(400).send("Password harus memiliki minimal 5 karakter");
+        return res.status(400).send("Passwords must have at least 5 characters");
     }
     if (!hasUppercase || !hasNumber) {
-        return res.status(400).send("Password harus mengandung huruf kapital dan angka");
+        return res.status(400).send("Password must contain capital letters and numbers");
     } else {
         result = await db.Developers.findAll();
         let id = formatname + (parseInt(result.length) + 1).toString().padStart(3, "0");
@@ -202,14 +202,14 @@ app.post("/api/developers/recharge", async (req, res) => {
         return res.status(400).send({ "msg": "Insufficient balance amount" })
     }
     let sum_api_hit = (parseInt(developer.api_hit)) + (parseInt(api_hit));
-    let count_balance =  (parseInt(developer.saldo)) - ((parseInt(api_hit)*5));
-    await db.Developers.update({ api_hit : sum_api_hit, saldo:count_balance }, { where: { developer_id: validation_token.developer_id } })
-    return res.status(201).send({ "Total Api Hit": sum_api_hit, "Balance Count":count_balance });
+    let count_balance = (parseInt(developer.saldo)) - ((parseInt(api_hit) * 5));
+    await db.Developers.update({ api_hit: sum_api_hit, saldo: count_balance }, { where: { developer_id: validation_token.developer_id } })
+    return res.status(201).send({ "Total Api Hit": sum_api_hit, "Balance Count": count_balance });
 });
 
 //NO 5 (ALDI)
 app.post("/api/developers/add/user", async (req, res) => {
-    let { group_id ,user_id } = req.body;
+    let { group_id, user_id } = req.body;
     let token = req.header('x-auth-token');
     if (!req.header('x-auth-token')) {
         return res.status(403).send({ "msg": "Authentication required" })
@@ -221,7 +221,7 @@ app.post("/api/developers/add/user", async (req, res) => {
     }
     const validateData = Joi.object({
         group_id: Joi.string().required().external(cek_develop).messages({ "string.empty": "something wrong Please check again", "any.required": "Please check value" }),
-        user_id : Joi.string().required().messages({ "string.empty": "Please input user id", "any.required": "check value", }),
+        user_id: Joi.string().required().messages({ "string.empty": "Please input user id", "any.required": "check value", }),
     })
     try {
         await validateData.validateAsync(req.body)
@@ -248,20 +248,20 @@ app.post("/api/developers/add/user", async (req, res) => {
             user_id: user_id
         }
     })
-    
+
 
     if (cekKembar) {
         return res.status(401).send({
             msg: "User id already registered!"
         })
     }
-    await db.Group_members.create({ group_id:group_id,user_id:user_id },)
-    return res.status(201).send({ msg: "User already join to group","Group Id": group_id, "User Id":user_id });
+    await db.Group_members.create({ group_id: group_id, user_id: user_id },)
+    return res.status(201).send({ msg: "User already join to group", "Group Id": group_id, "User Id": user_id });
 });
 
 // NO 6 (FIKO)
-app.get("/api/developers/groupuser/:group_id", async function(req, res){
-    const {group_id} = req.params;
+app.get("/api/developers/groupuser/:group_id", async function (req, res) {
+    const { group_id } = req.params;
     let token = req.header('x-auth-token');
     if (!req.header('x-auth-token')) {
         return res.status(403).send({ "msg": "Authentication required" })
@@ -277,14 +277,14 @@ app.get("/api/developers/groupuser/:group_id", async function(req, res){
             group_id: group_id
         }
     });
-    if(!cekGroupId){
+    if (!cekGroupId) {
         return res.status(404).send({
             msg: "Group_id not found!"
         })
     }
 
     const group = await db.Group_members.findAll({
-        where:{
+        where: {
             group_id: group_id
         }
     })
@@ -306,8 +306,8 @@ app.get("/api/developers/groupuser/:group_id", async function(req, res){
 //Group =========================================
 // DONE TINGGAL CEK ULANG + TAMBAIN THIRD PARTY API, BIAYA API HIT TIAP ENDPOINT MASIH BELUM
 // NO 1 (FIKO)
-app.post("/api/group", uploadImage.single("profile_picture"), async function(req, res){
-    let {group_name, group_description, user_id} = req.body;
+app.post("/api/group", uploadImage.single("profile_picture"), async function (req, res) {
+    let { group_name, group_description, user_id } = req.body;
 
     let token = req.header('x-auth-token');
     if (!req.header('x-auth-token')) {
@@ -319,17 +319,17 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function(req
         return res.status(400).send({ "msg": "Invalid JWT Key" })
     }
 
-    if(!group_description){
+    if (!group_description) {
         group_description = "-"
     }
     let profile_picture = "-";
 
-    if(!group_name){
+    if (!group_name) {
         return res.status(401).send({
             msg: "Group_name cannot be empty!"
         })
     }
-    if(!user_id){
+    if (!user_id) {
         return res.status(401).send({
             msg: "User_id cannot be empty!"
         })
@@ -337,10 +337,10 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function(req
 
     const groups = await db.Groups.findAll();
     let group_id;
-    if(groups.length==0){
-        group_id = "GRP" + (parseInt(groups.length)+1).toString().padStart(3, "0");
-    }else{
-        group_id = "GRP" + (parseInt((groups[groups.length-1].group_id).substring(3))+1).toString().padStart(3, "0");
+    if (groups.length == 0) {
+        group_id = "GRP" + (parseInt(groups.length) + 1).toString().padStart(3, "0");
+    } else {
+        group_id = "GRP" + (parseInt((groups[groups.length - 1].group_id).substring(3)) + 1).toString().padStart(3, "0");
     }
 
     var now = new Date();
@@ -348,7 +348,7 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function(req
     var date = now.getFullYear().toString().padStart(4, "0") + '-' + (now.getMonth() + 1).toString().padStart(2, "0") + '-' + now.getDate().toString().padStart(2, "0");
     var fullDate = date + ' ' + hour;
 
-    if(req.file){
+    if (req.file) {
         fs.renameSync(
             `./uploads/${req.file.filename}`,
             `./uploads/${group_id}.png`
@@ -380,9 +380,9 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function(req
 });
 
 // NO 2 (FIKO)
-app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async function(req, res){
-    let {group_name, group_description, user_id} = req.body;
-    let {group_id} = req.params;
+app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async function (req, res) {
+    let { group_name, group_description, user_id } = req.body;
+    let { group_id } = req.params;
 
     let token = req.header('x-auth-token');
     if (!req.header('x-auth-token')) {
@@ -394,14 +394,14 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
         return res.status(400).send({ "msg": "Invalid JWT Key" })
     }
 
-    if(!group_id){
+    if (!group_id) {
         return res.status(401).send({
             msg: "Group_id cannot be empty!"
         })
     }
 
     const cekGroup = await db.Groups.findByPk(group_id);
-    if(!cekGroup){
+    if (!cekGroup) {
         return res.status(404).send({
             msg: "Group_id not found!"
         })
@@ -413,33 +413,33 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
             developer_id: validation_token.developer_id
         }
     })
-    if(!cekGroupId){
+    if (!cekGroupId) {
         return res.status(404).send({
             msg: "Developer cannot edit this group!"
         })
     }
 
-    if(!group_name && !group_description && !req.file && !user_id){
+    if (!group_name && !group_description && !req.file && !user_id) {
         return res.status(401).send({
             msg: "At least 1 field must be filled!"
         })
     }
 
-    if(!group_description){
+    if (!group_description) {
         group_description = cekGroupId.group_description
     }
-    
-    if(!group_name){
+
+    if (!group_name) {
         group_name = cekGroupId.group_name
     }
 
-    if(!user_id){
+    if (!user_id) {
         user_id = cekGroupId.user_id
     }
 
     let profile_picture = cekGroupId.profile_picture;
 
-    if(req.file){
+    if (req.file) {
         fs.unlinkSync(`./uploads/${group_id}.png`);
         fs.renameSync(
             `./uploads/${req.file.filename}`,
@@ -453,9 +453,11 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
         group_name: group_name,
         group_description: group_description,
         profile_picture: profile_picture,
-    }, {where:{
-        group_id: group_id
-    }});
+    }, {
+        where: {
+            group_id: group_id
+        }
+    });
 
     const developer = await db.Developers.findByPk(validation_token.developer_id);
 
@@ -471,8 +473,8 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
 })
 
 // NO 3 (FIKO)
-app.delete("/api/group/:group_id", async function(req, res){
-    const {group_id} = req.params;
+app.delete("/api/group/:group_id", async function (req, res) {
+    const { group_id } = req.params;
 
     let token = req.header('x-auth-token');
     if (!req.header('x-auth-token')) {
@@ -484,7 +486,7 @@ app.delete("/api/group/:group_id", async function(req, res){
         return res.status(400).send({ "msg": "Invalid JWT Key" })
     }
 
-    if(!group_id){
+    if (!group_id) {
         return res.status(401).send({
             msg: "Group_id cannot be empty!"
         })
@@ -492,7 +494,7 @@ app.delete("/api/group/:group_id", async function(req, res){
 
     const cekGroupId = await db.Groups.findByPk(group_id);
 
-    if(!cekGroupId){
+    if (!cekGroupId) {
         return res.status(404).send({
             msg: "Group_id not found!"
         })
@@ -504,7 +506,7 @@ app.delete("/api/group/:group_id", async function(req, res){
             developer_id: validation_token.developer_id
         }
     })
-    if(!cekGroup){
+    if (!cekGroup) {
         return res.status(404).send({
             msg: "Developer cannot edit this group!"
         })
@@ -522,8 +524,8 @@ app.delete("/api/group/:group_id", async function(req, res){
 })
 
 // NO 4 (FIKO)
-app.get("/api/group/:group_id", async function(req, res){
-    let {group_id} = req.params;
+app.get("/api/group/:group_id", async function (req, res) {
+    let { group_id } = req.params;
 
     let token = req.header('x-auth-token');
     if (!req.header('x-auth-token')) {
@@ -535,14 +537,14 @@ app.get("/api/group/:group_id", async function(req, res){
         return res.status(400).send({ "msg": "Invalid JWT Key" })
     }
 
-    if(!group_id){
+    if (!group_id) {
         return res.status(401).send({
             msg: "Group_id cannot be empty!"
         })
     }
 
     const cekGroupId = await db.Groups.findByPk(group_id);
-    if(!cekGroupId){
+    if (!cekGroupId) {
         return res.status(404).send({
             msg: "Group_id not found!"
         })
