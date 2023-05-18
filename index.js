@@ -133,7 +133,7 @@ app.post("/api/developers/login", async (req, res) => {
 	});
 	if (!cekEmailDeveloper) {
 		return res.status(404).send({
-			msg: "Email not found!",
+			message: "Email not found!",
 		});
 	}
 
@@ -146,7 +146,7 @@ app.post("/api/developers/login", async (req, res) => {
 
 	if (!developer) {
 		return res.status(404).send({
-			msg: "Wrong password!",
+			message: "Wrong password!",
 		});
 	}
 
@@ -162,12 +162,12 @@ app.post("/api/developers/topup", async (req, res) => {
 	let { saldo } = req.body;
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
 	const validateData = Joi.object({
@@ -180,7 +180,7 @@ app.post("/api/developers/topup", async (req, res) => {
 	}
 
 	if (parseInt(saldo) < 1) {
-		return res.status(404).send({ msg: "Minimal " });
+		return res.status(404).send({ message: "Minimal " });
 	}
 	const developer = await db.Developers.findByPk(validation_token.developer_id);
 	let sum_saldo = parseInt(developer.saldo) + parseInt(saldo);
@@ -193,12 +193,12 @@ app.post("/api/developers/recharge", async (req, res) => {
 	let { api_hit } = req.body;
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 	const validateData = Joi.object({
 		api_hit: Joi.string().required().messages({ "string.empty": "Please input api hit", "any.required": "check value" }),
@@ -211,7 +211,7 @@ app.post("/api/developers/recharge", async (req, res) => {
 	const developer = await db.Developers.findByPk(validation_token.developer_id);
 
 	if (api_hit * 5 > parseInt(developer.saldo)) {
-		return res.status(400).send({ msg: "Insufficient balance amount" });
+		return res.status(400).send({ message: "Insufficient balance amount" });
 	}
 	let sum_api_hit = parseInt(developer.api_hit) + parseInt(api_hit);
 	let count_balance = parseInt(developer.saldo) - parseInt(api_hit) * 5;
@@ -224,12 +224,12 @@ app.post("/api/developers/add/user", async (req, res) => {
 	let { group_id, user_id } = req.body;
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 	const validateData = Joi.object({
 		group_id: Joi.string().required().external(cek_develop).messages({ "string.empty": "something wrong Please check again", "any.required": "Please check value" }),
@@ -250,7 +250,7 @@ app.post("/api/developers/add/user", async (req, res) => {
 
 	if (!cek_dev) {
 		return res.status(401).send({
-			msg: "developers don't have access",
+			message: "developers don't have access",
 		});
 	}
 
@@ -263,11 +263,11 @@ app.post("/api/developers/add/user", async (req, res) => {
 
 	if (cekKembar) {
 		return res.status(401).send({
-			msg: "User id already registered!",
+			message: "User id already registered!",
 		});
 	}
 	await db.Group_members.create({ group_id: group_id, user_id: user_id });
-	return res.status(201).send({ msg: "User already join to group", "Group Id": group_id, "User Id": user_id });
+	return res.status(201).send({ message: "User joined the group", "Group Id": group_id, "User Id": user_id });
 });
 
 // NO 6 (FIKO)
@@ -275,12 +275,12 @@ app.get("/api/developers/groupuser/:group_id", async function (req, res) {
 	const { group_id } = req.params;
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
 	const cekGroupId = await db.Groups.findOne({
@@ -290,7 +290,7 @@ app.get("/api/developers/groupuser/:group_id", async function (req, res) {
 	});
 	if (!cekGroupId) {
 		return res.status(404).send({
-			msg: "Group_id not found!",
+			message: "Group_id not found!",
 		});
 	}
 
@@ -321,12 +321,12 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
 
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
 	if (!group_description) {
@@ -336,12 +336,12 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
 
 	if (!group_name) {
 		return res.status(401).send({
-			msg: "Group_name cannot be empty!",
+			message: "Group_name cannot be empty!",
 		});
 	}
 	if (!user_id) {
 		return res.status(401).send({
-			msg: "User_id cannot be empty!",
+			message: "User_id cannot be empty!",
 		});
 	}
 
@@ -361,8 +361,8 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
 	};
 
 	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Group_name contains offensive word" });
-	if (result.data.results[1].flagged === true) return res.status(401).send({ msg: "Group_description contains offensive word" });
+	if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Group_name contains offensive word" });
+	if (result.data.results[1].flagged === true) return res.status(401).send({ message: "Group_description contains offensive word" });
 
 	const groups = await db.Groups.findAll();
 	let group_id;
@@ -412,24 +412,24 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
 
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
 	if (!group_id) {
 		return res.status(401).send({
-			msg: "Group_id cannot be empty!",
+			message: "Group_id cannot be empty!",
 		});
 	}
 
 	const cekGroup = await db.Groups.findByPk(group_id);
 	if (!cekGroup) {
 		return res.status(404).send({
-			msg: "Group_id not found!",
+			message: "Group_id not found!",
 		});
 	}
 
@@ -441,13 +441,13 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
 	});
 	if (!cekGroupId) {
 		return res.status(404).send({
-			msg: "Developer cannot edit this group!",
+			message: "Developer cannot edit this group!",
 		});
 	}
 
 	if (!group_name && !group_description && !req.file && !user_id) {
 		return res.status(401).send({
-			msg: "At least 1 field must be filled!",
+			message: "At least 1 field must be filled!",
 		});
 	}
 
@@ -479,8 +479,8 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
 	};
 
 	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Group_name contains offensive word" });
-	if (result.data.results[1].flagged === true) return res.status(401).send({ msg: "Group_description contains offensive word" });
+	if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Group_name contains offensive word" });
+	if (result.data.results[1].flagged === true) return res.status(401).send({ message: "Group_description contains offensive word" });
 
 	let profile_picture = cekGroupId.profile_picture;
 
@@ -525,17 +525,17 @@ app.delete("/api/group/:group_id", async function (req, res) {
 
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
 	if (!group_id) {
 		return res.status(401).send({
-			msg: "Group_id cannot be empty!",
+			message: "Group_id cannot be empty!",
 		});
 	}
 
@@ -543,7 +543,7 @@ app.delete("/api/group/:group_id", async function (req, res) {
 
 	if (!cekGroupId) {
 		return res.status(404).send({
-			msg: "Group_id not found!",
+			message: "Group_id not found!",
 		});
 	}
 
@@ -555,7 +555,7 @@ app.delete("/api/group/:group_id", async function (req, res) {
 	});
 	if (!cekGroup) {
 		return res.status(404).send({
-			msg: "Developer cannot edit this group!",
+			message: "Developer cannot edit this group!",
 		});
 	}
 
@@ -566,7 +566,7 @@ app.delete("/api/group/:group_id", async function (req, res) {
 	});
 	fs.unlinkSync(`./uploads/${group_id}.png`);
 	return res.status(201).send({
-		msg: `Success delete ${cekGroupId.group_name}`,
+		message: `Success delete ${cekGroupId.group_name}`,
 	});
 });
 
@@ -576,24 +576,24 @@ app.get("/api/group/:group_id", async function (req, res) {
 
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
 	if (!group_id) {
 		return res.status(401).send({
-			msg: "Group_id cannot be empty!",
+			message: "Group_id cannot be empty!",
 		});
 	}
 
 	const cekGroupId = await db.Groups.findByPk(group_id);
 	if (!cekGroupId) {
 		return res.status(404).send({
-			msg: "Group_id not found!",
+			message: "Group_id not found!",
 		});
 	}
 
@@ -668,19 +668,19 @@ app.post("/api/thread", cekToken, async (req, res) => {
 	// Validation
 	if (!group_id || !user_id || !thread_name || !thread_description) {
 		return res.status(400).send({
-			msg: "All fields are required!",
+			message: "All fields are required!",
 		});
 	}
 
 	let group = await db.Groups.findByPk(group_id);
 	if (!group) {
 		return res.status(404).send({
-			msg: "Group not found!",
+			message: "Group not found!",
 		});
 	}
 	if (group.developer_id != developer_id) {
 		return res.status(404).send({
-			msg: "Developer cannot create this thread!",
+			message: "Developer cannot create this thread!",
 		});
 	}
 
@@ -698,7 +698,7 @@ app.post("/api/thread", cekToken, async (req, res) => {
 	});
 	if (validMember == false) {
 		return res.status(400).send({
-			msg: `${user_id} is not part of a group ${group.group_name}!`,
+			message: `${user_id} is not part of a group ${group.group_name}!`,
 		});
 	}
 
@@ -720,12 +720,12 @@ app.post("/api/thread", cekToken, async (req, res) => {
 	let result = await axios.request(options);
 	if (result.data.results[0].flagged === true) {
 		return res.status(401).send({
-			msg: "Thread_name contains offensive word",
+			message: "Thread_name contains offensive word",
 		});
 	}
 	if (result.data.results[1].flagged === true) {
 		return res.status(401).send({
-			msg: "Thread_description contains offensive word",
+			message: "Thread_description contains offensive word",
 		});
 	}
 
@@ -773,7 +773,7 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 	let thread = await db.Threads.findByPk(thread_id);
 	if (!thread) {
 		return res.status(404).send({
-			msg: "Thread not found!",
+			message: "Thread not found!",
 		});
 	}
 
@@ -786,7 +786,7 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 
 	if (group.developer_id != developer_id) {
 		return res.status(404).send({
-			msg: "Developer is not the owner of this thread!",
+			message: "Developer is not the owner of this thread!",
 		});
 	}
 
@@ -799,7 +799,7 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 		});
 		if (validMem == false) {
 			return res.status(400).send({
-				msg: `${user_id} is not part of a group ${group.group_name}!`,
+				message: `${user_id} is not part of a group ${group.group_name}!`,
 			});
 		}
 
@@ -841,12 +841,12 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 		let result = await axios.request(options);
 		if (result.data.results[0].flagged === true) {
 			return res.status(401).send({
-				msg: "Thread_name contains offensive word",
+				message: "Thread_name contains offensive word",
 			});
 		}
 		if (result.data.results[1].flagged === true) {
 			return res.status(401).send({
-				msg: "Thread_description contains offensive word",
+				message: "Thread_description contains offensive word",
 			});
 		}
 	}
@@ -869,7 +869,7 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 		let result = await axios.request(options);
 		if (result.data.results[0].flagged === true) {
 			return res.status(401).send({
-				msg: "Thread_name contains offensive word",
+				message: "Thread_name contains offensive word",
 			});
 		}
 
@@ -910,7 +910,7 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 		let result = await axios.request(options);
 		if (result.data.results[0].flagged === true) {
 			return res.status(401).send({
-				msg: "Thread_description contains offensive word",
+				message: "Thread_description contains offensive word",
 			});
 		}
 
@@ -954,13 +954,13 @@ app.delete("/api/thread/:thread_id", cekToken, async (req, res) => {
 	let thread = await db.Threads.findByPk(thread_id);
 	if (!thread) {
 		return res.status(400).send({
-			msg: "Thread not found!",
+			message: "Thread not found!",
 		});
 	}
 	let group = await db.Groups.findByPk(thread.group_id);
 	if (group.developer_id != developer_id) {
 		return res.status(404).send({
-			msg: "Developer is not the owner of this thread!",
+			message: "Developer is not the owner of this thread!",
 		});
 	}
 
@@ -979,7 +979,7 @@ app.delete("/api/thread/:thread_id", cekToken, async (req, res) => {
 	}
 
 	return res.status(200).send({
-		msg: "Thread berhasil dihapus!",
+		message: "Thread berhasil dihapus!",
 	});
 });
 
@@ -993,13 +993,13 @@ app.get("/api/thread/:thread_id", cekToken, async (req, res) => {
 	let thread = await db.Threads.findByPk(thread_id);
 	if (!thread) {
 		return res.status(400).send({
-			msg: "Thread not found!",
+			message: "Thread not found!",
 		});
 	}
 	let group = await db.Groups.findByPk(thread.group_id);
 	if (group.developer_id != developer_id) {
 		return res.status(404).send({
-			msg: "Developer is not the owner of this thread!",
+			message: "Developer is not the owner of this thread!",
 		});
 	}
 
@@ -1019,29 +1019,29 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
-	if (!thread_id) return res.status(401).send({ msg: "Thread_id cannot be empty!" });
+	if (!thread_id) return res.status(401).send({ message: "Thread_id cannot be empty!" });
 
 	let thread = await db.Threads.findByPk(thread_id);
-	if (!thread) return res.status(404).send({ msg: "Thread_id not found!" });
+	if (!thread) return res.status(404).send({ message: "Thread_id not found!" });
 	let cekGroup = await db.Groups.findByPk(thread.group_id);
-	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ msg: "Developer cannot create this post!" });
-	if (!user_id) return res.status(401).send({ msg: "User_id cannot be empty!" });
+	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ message: "Developer cannot create this post!" });
+	if (!user_id) return res.status(401).send({ message: "User_id cannot be empty!" });
 	let member = await db.Group_members.findOne({
 		where: {
 			group_id: cekGroup.group_id,
 			user_id: user_id,
 		},
 	});
-	if (!member) return res.status(404).send({ msg: "User cannot create this post!" });
-	if (!post_name) return res.status(401).send({ msg: "Post_name cannot be empty!" });
+	if (!member) return res.status(404).send({ message: "User cannot create this post!" });
+	if (!post_name) return res.status(401).send({ message: "Post_name cannot be empty!" });
 
 	let jml = await db.Posts.findAndCountAll();
 	let id = "POS" + (parseInt(jml.count) + 1).toString().padStart(3, "0");
@@ -1071,8 +1071,8 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 	};
 
 	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Post_name contains offensive word" });
-	if (result.data.results[1].flagged === true) return res.status(401).send({ msg: "Post_description contains offensive word" });
+	if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Post_name contains offensive word" });
+	if (result.data.results[1].flagged === true) return res.status(401).send({ message: "Post_description contains offensive word" });
 
 	var now = new Date();
 	var hour = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0") + ":" + now.getSeconds().toString().padStart(2, "0");
@@ -1106,33 +1106,33 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 	let { post_id } = req.params;
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
-	if (!post_id) return res.status(401).send({ msg: "Post_id cannot be empty!" });
+	if (!post_id) return res.status(401).send({ message: "Post_id cannot be empty!" });
 
 	let post = await db.Posts.findByPk(post_id);
-	if (!post) return res.status(404).send({ msg: "Post_id not found!" });
+	if (!post) return res.status(404).send({ message: "Post_id not found!" });
 
 	let thread = await db.Threads.findByPk(post.thread_id);
 	let cekGroup = await db.Groups.findByPk(thread.group_id);
 	if (!user_id) user_id = post.user_id;
-	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ msg: "Developer cannot edit this post!" });
+	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ message: "Developer cannot edit this post!" });
 	let member = await db.Group_members.findOne({
 		where: {
 			group_id: cekGroup.group_id,
 			user_id: user_id,
 		},
 	});
-	if (!member) return res.status(404).send({ msg: "User cannot create this post!" });
+	if (!member) return res.status(404).send({ message: "User cannot create this post!" });
 
-	if (!post_description && !req.file && !post_name && !action) return res.status(401).send({ msg: "At least 1 field must be filled!" });
-	if (post_name == "") return res.status(401).send({ msg: "Post_name cannot be empty string!" });
+	if (!post_description && !req.file && !post_name && !action) return res.status(401).send({ message: "At least 1 field must be filled!" });
+	if (post_name == "") return res.status(401).send({ message: "Post_name cannot be empty string!" });
 	cek = [];
 	if (post_description) cek.push(post_description);
 	if (post_name) cek.push(post_name);
@@ -1153,16 +1153,16 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 		};
 
 		let result = await axios.request(options);
-		if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Post_name contains offensive word" });
+		if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Post_name contains offensive word" });
 		if (result.data.results.length > 1) {
-			if (result.data.results[1].flagged === true) return res.status(401).send({ msg: "Post_name contains offensive word" });
+			if (result.data.results[1].flagged === true) return res.status(401).send({ message: "Post_name contains offensive word" });
 		}
 	}
 	if (post_description) post.set({ post_description: post_description });
 	if (post_name) post.set({ post_name: post_name });
 	post.set({ user_id: user_id });
 
-	if (action && action != "like" && action != "dislike") return res.status(401).send({ msg: "Invalid Action" });
+	if (action && action != "like" && action != "dislike") return res.status(401).send({ message: "Invalid Action" });
 	let prevLike = JSON.parse(post.likes);
 	if (!prevLike) prevLike = [];
 
@@ -1220,21 +1220,21 @@ app.delete("/api/post/:post_id", async (req, res) => {
 	let { post_id } = req.params;
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
-	if (!post_id) return res.status(401).send({ msg: "Post_id cannot be empty!" });
+	if (!post_id) return res.status(401).send({ message: "Post_id cannot be empty!" });
 
 	let post = await db.Posts.findByPk(post_id);
-	if (!post) return res.status(404).send({ msg: "Post_id not found!" });
+	if (!post) return res.status(404).send({ message: "Post_id not found!" });
 	let thread = await db.Threads.findByPk(post.thread_id);
 	let cekGroup = await db.Groups.findByPk(thread.group_id);
-	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ msg: "Developer cannot delete this post!" });
+	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ message: "Developer cannot delete this post!" });
 	fs.unlinkSync(`./${post.post_image}`);
 	let name = post.post_name;
 	await db.Posts.destroy({
@@ -1243,19 +1243,19 @@ app.delete("/api/post/:post_id", async (req, res) => {
 		},
 	});
 	return res.status(201).send({
-		msg: `Success delete ${name}`,
+		message: `Success delete ${name}`,
 	});
 });
 
 app.get("/api/post/trending", async (req, res) => {
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 	let data = await db.Posts.findAll({
 		order: [["views", "DESC"]],
@@ -1268,24 +1268,24 @@ app.get("/api/post/:post_id", async (req, res) => {
 
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
 	if (!post_id) {
 		return res.status(401).send({
-			msg: "Post_id cannot be empty!",
+			message: "Post_id cannot be empty!",
 		});
 	}
 
 	const post = await db.Posts.findByPk(post_id);
 	if (!post) {
 		return res.status(404).send({
-			msg: "Post_id not found!",
+			message: "Post_id not found!",
 		});
 	}
 	await post.increment({ views: 1 });
@@ -1317,29 +1317,29 @@ app.post("/api/comment", async (req, res) => {
 
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 
-	if (!post_id) return res.status(401).send({ msg: "Post_id cannot be empty!" });
-	if (!user_id) return res.status(401).send({ msg: "User_id cannot be empty!" });
+	if (!post_id) return res.status(401).send({ message: "Post_id cannot be empty!" });
+	if (!user_id) return res.status(401).send({ message: "User_id cannot be empty!" });
 	let post = await db.Posts.findByPk(post_id);
-	if (!post) return res.status(404).send({ msg: "Post_id not found!" });
+	if (!post) return res.status(404).send({ message: "Post_id not found!" });
 	let thread = await db.Threads.findByPk(post.thread_id);
 	let cekGroup = await db.Groups.findByPk(thread.group_id);
-	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ msg: "Developer cannot create this comment!" });
+	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ message: "Developer cannot create this comment!" });
 	let member = await db.Group_members.findOne({
 		where: {
 			group_id: cekGroup.group_id,
 			user_id: user_id,
 		},
 	});
-	if (!member) return res.status(404).send({ msg: "User cannot create this comment!" });
-	if (!comment) return res.status(401).send({ msg: "Comment cannot be empty!" });
+	if (!member) return res.status(404).send({ message: "User cannot create this comment!" });
+	if (!comment) return res.status(401).send({ message: "Comment cannot be empty!" });
 	const options = {
 		method: "POST",
 		url: "https://openai80.p.rapidapi.com/moderations",
@@ -1356,7 +1356,7 @@ app.post("/api/comment", async (req, res) => {
 	};
 
 	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Comment contains offensive word" });
+	if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Comment contains offensive word" });
  
 	var now = new Date();
 	var hour = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0") + ":" + now.getSeconds().toString().padStart(2, "0");
@@ -1382,19 +1382,19 @@ app.delete("/api/comment/:comment_id", async function(req, res){
 
 	let token = req.header("x-auth-token");
 	if (!req.header("x-auth-token")) {
-		return res.status(403).send({ msg: "Authentication required" });
+		return res.status(403).send({ message: "Authentication required" });
 	}
 	try {
 		validation_token = jwt.verify(token, JWT_KEY);
 	} catch (err) {
-		return res.status(400).send({ msg: "Invalid JWT Key" });
+		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 	let comment = await db.Comments.findByPk(comment_id);
-	if(!comment) return res.status(404).send({ msg: "Comment_id not found! "})
+	if(!comment) return res.status(404).send({ message: "Comment_id not found! "})
 	let post = await db.Posts.findByPk(comment.post_id);
 	let thread = await db.Threads.findByPk(post.thread_id);
 	let cekGroup = await db.Groups.findByPk(thread.group_id);
-	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ msg: "Developer cannot delete this comment!" });
+	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ message: "Developer cannot delete this comment!" });
 
 	await db.Comments.destroy({
 		where: {
@@ -1403,7 +1403,7 @@ app.delete("/api/comment/:comment_id", async function(req, res){
 	})
 	return res.status(201).send({
 		comment: comment.comment,
-		msg: `This comment was successfully deleted!`
+		message: `This comment was successfully deleted!`
 	})
 })
 
@@ -1419,7 +1419,7 @@ app.put("/api/comment/:comment_id",cekToken, async (req,res) => {
 	let comments = await db.Comments.findByPk(comment_id);
 	if (!comments) {
 		return res.status(404).send({
-			msg: "Comment not found!"
+			message: "Comment not found!"
 		});
 	}
 	let post = await db.Posts.findByPk(comments.post_id);
@@ -1427,7 +1427,7 @@ app.put("/api/comment/:comment_id",cekToken, async (req,res) => {
 	let group = await db.Groups.findByPk(thread.group_id);
 	if (group.developer_id != developer_id) {
 		return res.status(404).send({
-			msg: "Developer cannot edit this comment!"
+			message: "Developer cannot edit this comment!"
 		})
 	}
 
@@ -1446,7 +1446,7 @@ app.put("/api/comment/:comment_id",cekToken, async (req,res) => {
 		});
 		if (validMem == false) {
 			return res.status(400).send({
-				msg: `${user_id} is not part of a group ${group.group_name}!`
+				message: `${user_id} is not part of a group ${group.group_name}!`
 			})
 		}
 
@@ -1486,7 +1486,7 @@ app.put("/api/comment/:comment_id",cekToken, async (req,res) => {
 		};
 
 		let result = await axios.request(options);
-		if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Comment contains offensive word" });
+		if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Comment contains offensive word" });
 
 		try {
 			tempUser = await db.Comments.update(
