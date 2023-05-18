@@ -679,7 +679,7 @@ app.post("/api/thread", cekToken, async (req, res) => {
 		});
 	}
 	if (group.developer_id != developer_id) {
-		return res.status(400).send({
+		return res.status(404).send({
 			msg: "Developer cannot create this thread!",
 		});
 	}
@@ -785,7 +785,7 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 	});
 
 	if (group.developer_id != developer_id) {
-		return res.status(400).send({
+		return res.status(404).send({
 			msg: "Developer is not the owner of this thread!",
 		});
 	}
@@ -959,7 +959,7 @@ app.delete("/api/thread/:thread_id", cekToken, async (req, res) => {
 	}
 	let group = await db.Groups.findByPk(thread.group_id);
 	if (group.developer_id != developer_id) {
-		return res.status(400).send({
+		return res.status(404).send({
 			msg: "Developer is not the owner of this thread!",
 		});
 	}
@@ -998,7 +998,7 @@ app.get("/api/thread/:thread_id", cekToken, async (req, res) => {
 	}
 	let group = await db.Groups.findByPk(thread.group_id);
 	if (group.developer_id != developer_id) {
-		return res.status(400).send({
+		return res.status(404).send({
 			msg: "Developer is not the owner of this thread!",
 		});
 	}
@@ -1055,24 +1055,24 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 		fs.renameSync(`./uploads/${req.file.filename}`, `./uploads/${filename}`);
 		file = `./uploads/${filename}`;
 	}
-	const options = {
-		method: "POST",
-		url: "https://openai80.p.rapidapi.com/moderations",
-		headers: {
-			"content-type": "application/json",
-			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-			"Accept-Encoding": "*",
-		},
-		data: {
-			input: [post_name, post_description],
-			model: "text-moderation-latest",
-		},
-	};
+	// const options = {
+	// 	method: "POST",
+	// 	url: "https://openai80.p.rapidapi.com/moderations",
+	// 	headers: {
+	// 		"content-type": "application/json",
+	// 		"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
+	// 		"X-RapidAPI-Host": "openai80.p.rapidapi.com",
+	// 		"Accept-Encoding": "*",
+	// 	},
+	// 	data: {
+	// 		input: [post_name, post_description],
+	// 		model: "text-moderation-latest",
+	// 	},
+	// };
 
-	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Post_name contains offensive word" });
-	if (result.data.results[1].flagged === true) return res.status(401).send({ msg: "Post_description contains offensive word" });
+	// let result = await axios.request(options);
+	// if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Post_name contains offensive word" });
+	// if (result.data.results[1].flagged === true) return res.status(401).send({ msg: "Post_description contains offensive word" });
 
 	var now = new Date();
 	var hour = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0") + ":" + now.getSeconds().toString().padStart(2, "0");
@@ -1340,23 +1340,23 @@ app.post("/api/comment", async (req, res) => {
 	});
 	if (!member) return res.status(404).send({ msg: "User cannot create this comment!" });
 	if (!comment) return res.status(401).send({ msg: "Comment cannot be empty!" });
-	const options = {
-		method: "POST",
-		url: "https://openai80.p.rapidapi.com/moderations",
-		headers: {
-			"content-type": "application/json",
-			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-			"Accept-Encoding": "*",
-		},
-		data: {
-			input: comment, 
-			model: "text-moderation-latest",
-		},
-	};
+	// const options = {
+	// 	method: "POST",
+	// 	url: "https://openai80.p.rapidapi.com/moderations",
+	// 	headers: {
+	// 		"content-type": "application/json",
+	// 		"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
+	// 		"X-RapidAPI-Host": "openai80.p.rapidapi.com",
+	// 		"Accept-Encoding": "*",
+	// 	},
+	// 	data: {
+	// 		input: comment, 
+	// 		model: "text-moderation-latest",
+	// 	},
+	// };
 
-	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Comment contains offensive word" });
+	// let result = await axios.request(options);
+	// if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Comment contains offensive word" });
  
 	var now = new Date();
 	var hour = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0") + ":" + now.getSeconds().toString().padStart(2, "0");
@@ -1404,5 +1404,114 @@ app.delete("/api/comment/:comment_id", async function(req, res){
 	return res.status(201).send({
 		comment: comment.comment,
 		msg: `This comment was successfully deleted!`
+	})
+})
+
+// (Geo)
+app.put("/api/comment/:comment_id",cekToken, async (req,res) => {
+	let { comment_id } = req.params;
+	let user = req.user;
+	let developer_id = user.developer_id;
+	let developer = await db.Developers.findByPk(developer_id);
+
+	let {user_id, comment} = req.body;
+
+	let comments = await db.Comments.findByPk(comment_id);
+	if (!comments) {
+		return res.status(404).send({
+			msg: "Comment not found!"
+		});
+	}
+	let post = await db.Posts.findByPk(comments.post_id);
+	let thread = await db.Threads.findByPk(post.thread_id);
+	let group = await db.Groups.findByPk(thread.group_id);
+	if (group.developer_id != developer_id) {
+		return res.status(404).send({
+			msg: "Developer cannot edit this comment!"
+		})
+	}
+
+	if (user_id) {
+
+		let groupMembers = await db.Group_members.findAll({
+			where: {
+				group_id: group.group_id
+			}
+		});
+		let validMem = false;
+		groupMembers.forEach(gMem => {
+			if (gMem.user_id == user_id) {
+				validMem = true;
+			}
+		});
+		if (validMem == false) {
+			return res.status(400).send({
+				msg: `${user_id} is not part of a group ${group.group_name}!`
+			})
+		}
+
+		try {
+			tempUser = await db.Comments.update(
+				{
+					user_id: user_id,
+				},
+				{
+					where: {
+						comment_id: comment_id
+					},
+				}
+			);
+		} catch (error) {
+			return res.status(400).send({
+				message: "Update Failed",
+				error,
+			});
+		}
+	}
+
+	if (comment) {
+		// const options = {
+		// 	method: "POST",
+		// 	url: "https://openai80.p.rapidapi.com/moderations",
+		// 	headers: {
+		// 		"content-type": "application/json",
+		// 		"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
+		// 		"X-RapidAPI-Host": "openai80.p.rapidapi.com",
+		// 		"Accept-Encoding": "*",
+		// 	},
+		// 	data: {
+		// 		input: comment, 
+		// 		model: "text-moderation-latest",
+		// 	},
+		// };
+
+		// let result = await axios.request(options);
+		// if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Comment contains offensive word" });
+
+		try {
+			tempUser = await db.Comments.update(
+				{
+					comment: comment,
+				},
+				{
+					where: {
+						comment_id: comment_id
+					},
+				}
+			);
+		} catch (error) {
+			return res.status(400).send({
+				message: "Update Failed",
+				error,
+			});
+		}
+	}
+
+	// Updated Data
+	comments = await db.Comments.findByPk(comment_id);
+
+	return res.status(201).send({
+		user_id: comments.user_id,
+		comment: comments.comment
 	})
 })
