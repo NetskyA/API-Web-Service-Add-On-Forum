@@ -1311,7 +1311,8 @@ app.get("/api/post/:post_id", async (req, res) => {
 
 //Comment =========================================
 // MASIH BELUM
-app.post("/api/comment", uploadFile.single("post_file"), async (req, res) => {
+// (Alvin)
+app.post("/api/comment", async (req, res) => {
 	let { post_id, user_id, comment} = req.body;
 
 	let token = req.header("x-auth-token");
@@ -1374,3 +1375,34 @@ app.post("/api/comment", uploadFile.single("post_file"), async (req, res) => {
 		created_at:fullDate
 	});
 });
+
+// (Fiko)
+app.delete("/api/comment/:comment_id", async function(req, res){
+	let {comment_id} = req.params;
+
+	let token = req.header("x-auth-token");
+	if (!req.header("x-auth-token")) {
+		return res.status(403).send({ msg: "Authentication required" });
+	}
+	try {
+		validation_token = jwt.verify(token, JWT_KEY);
+	} catch (err) {
+		return res.status(400).send({ msg: "Invalid JWT Key" });
+	}
+	let comment = await db.Comments.findByPk(comment_id);
+	if(!comment) return res.status(404).send({ msg: "Comment_id not found! "})
+	let post = await db.Posts.findByPk(comment.post_id);
+	let thread = await db.Threads.findByPk(post.thread_id);
+	let cekGroup = await db.Groups.findByPk(thread.group_id);
+	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ msg: "Developer cannot delete this comment!" });
+
+	await db.Comments.destroy({
+		where: {
+			comment_id: comment_id
+		}
+	})
+	return res.status(201).send({
+		comment: comment.comment,
+		msg: `This comment was successfully deleted!`
+	})
+})
