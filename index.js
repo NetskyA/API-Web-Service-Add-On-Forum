@@ -1033,6 +1033,7 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 	if (!thread) return res.status(404).send({ msg: "Thread_id not found!" });
 	let cekGroup = await db.Groups.findByPk(thread.group_id);
 	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ msg: "Developer cannot create this post!" });
+	if (!user_id) return res.status(401).send({ msg: "User_id cannot be empty!" });
 	let member = await db.Group_members.findOne({
 		where: {
 			group_id: cekGroup.group_id,
@@ -1310,3 +1311,66 @@ app.get("/api/post/:post_id", async (req, res) => {
 
 //Comment =========================================
 // MASIH BELUM
+app.post("/api/comment", uploadFile.single("post_file"), async (req, res) => {
+	let { post_id, user_id, comment} = req.body;
+
+	let token = req.header("x-auth-token");
+	if (!req.header("x-auth-token")) {
+		return res.status(403).send({ msg: "Authentication required" });
+	}
+	try {
+		validation_token = jwt.verify(token, JWT_KEY);
+	} catch (err) {
+		return res.status(400).send({ msg: "Invalid JWT Key" });
+	}
+
+	if (!post_id) return res.status(401).send({ msg: "Post_id cannot be empty!" });
+	if (!user_id) return res.status(401).send({ msg: "User_id cannot be empty!" });
+	let post = await db.Posts.findByPk(post_id);
+	if (!post) return res.status(404).send({ msg: "Post_id not found!" });
+	let thread = await db.Threads.findByPk(post.thread_id);
+	let cekGroup = await db.Groups.findByPk(thread.group_id);
+	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ msg: "Developer cannot create this comment!" });
+	let member = await db.Group_members.findOne({
+		where: {
+			group_id: cekGroup.group_id,
+			user_id: user_id,
+		},
+	});
+	if (!member) return res.status(404).send({ msg: "User cannot create this comment!" });
+	if (!comment) return res.status(401).send({ msg: "Comment cannot be empty!" });
+	const options = {
+		method: "POST",
+		url: "https://openai80.p.rapidapi.com/moderations",
+		headers: {
+			"content-type": "application/json",
+			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
+			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
+			"Accept-Encoding": "*",
+		},
+		data: {
+			input: comment, 
+			model: "text-moderation-latest",
+		},
+	};
+
+	let result = await axios.request(options);
+	if (result.data.results[0].flagged === true) return res.status(401).send({ msg: "Comment contains offensive word" });
+ 
+	var now = new Date();
+	var hour = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0") + ":" + now.getSeconds().toString().padStart(2, "0");
+	var date = now.getFullYear().toString().padStart(4, "0") + "-" + (now.getMonth() + 1).toString().padStart(2, "0") + "-" + now.getDate().toString().padStart(2, "0");
+	var fullDate = date + " " + hour;
+
+	await db.Comments.create({
+		post_id:post_id,
+		user_id: user_id,
+		comment:comment,
+		created_at: fullDate,
+	});
+
+	return res.status(201).send({
+		comment:comment,
+		created_at:fullDate
+	});
+});
