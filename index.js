@@ -1,6 +1,6 @@
 // all libraries are already installed, we just need to use them.
 
-// BUAT BAYAR API HIT
+// BUAT BAYAR API HIT.
 // const temp = await bayar_api_hit("DEVELOPER_ID", 1);
 // if(temp==false){
 // 	return res.status(401).send({ messages: "Api hit is not enough!"})
