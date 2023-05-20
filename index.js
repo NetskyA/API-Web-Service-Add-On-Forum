@@ -1,5 +1,11 @@
 // all libraries are already installed, we just need to use them.
 
+// BUAT BAYAR API HIT
+// const temp = await bayar_api_hit("DEVELOPER_ID", 1);
+// if(temp==false){
+// 	return res.status(401).send({ messages: "Api hit is not enough!"})
+// }
+
 // => All Library connection
 const express = require("express");
 const app = express();
@@ -74,9 +80,71 @@ const cek_groupname = async (group_name) => {
 	return group_name;
 };
 
+function cekToken(req, res, next) {
+	const token = req.headers["x-auth-token"];
+	if (!token) {
+		return res.status(403).send("Unauthorized");
+	}
+
+	try {
+		const user = jwt.verify(token, JWT_KEY);
+		req.user = user;
+		next();
+	} catch (error) {
+		console.log(error);
+		return res.status(400).send(error);
+	}
+}
+
+async function generateThreadID() {
+	let tempID = "THR";
+
+	// Find Last ID
+	let threads = await db.Threads.findAll({
+		where: {
+			thread_id: {
+				[Op.like]: "%" + tempID + "%",
+			},
+		},
+	});
+
+	let lastID;
+	if (threads.length > 0) {
+		threads.forEach((thread) => {
+			let thread_id = thread.thread_id;
+			lastID = thread_id.substring(3);
+		});
+	} else {
+		lastID = "000";
+	}
+	lastID++;
+
+	let newID = tempID + lastID.toString().padStart(3, "0");
+
+	return newID;
+}
+
+async function bayar_api_hit(developer_id, api_hit){
+	const tempDev = await db.Developers.findByPk(developer_id);
+
+	let temp_api_hit = parseInt(tempDev.api_hit) - parseInt(api_hit);
+
+	if(temp_api_hit<0){
+		return false;
+	}else{
+		await db.Developers.update({
+			api_hit: temp_api_hit
+		}, {where: {
+			developer_id: developer_id
+		}})
+		return true;
+	}
+}
+
 // => End all function
 
 //Developer =========================================
+
 //NO 1 (ALDI)
 app.post("/api/developers/register", async (req, res) => {
 	let { username, email, password, phone } = req.body;
@@ -612,50 +680,6 @@ app.get("/api/group/:group_id", async function (req, res) {
 
 //Thread =========================================
 // (Geo)
-
-function cekToken(req, res, next) {
-	const token = req.headers["x-auth-token"];
-	if (!token) {
-		return res.status(403).send("Unauthorized");
-	}
-
-	try {
-		const user = jwt.verify(token, JWT_KEY);
-		req.user = user;
-		next();
-	} catch (error) {
-		console.log(error);
-		return res.status(400).send(error);
-	}
-}
-
-async function generateThreadID() {
-	let tempID = "THR";
-
-	// Find Last ID
-	let threads = await db.Threads.findAll({
-		where: {
-			thread_id: {
-				[Op.like]: "%" + tempID + "%",
-			},
-		},
-	});
-
-	let lastID;
-	if (threads.length > 0) {
-		threads.forEach((thread) => {
-			let thread_id = thread.thread_id;
-			lastID = thread_id.substring(3);
-		});
-	} else {
-		lastID = "000";
-	}
-	lastID++;
-
-	let newID = tempID + lastID.toString().padStart(3, "0");
-
-	return newID;
-}
 
 // No1
 app.post("/api/thread", cekToken, async (req, res) => {
