@@ -143,54 +143,54 @@ async function bayar_api_hit(developer_id, api_hit) {
 	}
 }
 
-async function translateText(text){
+async function translateText(text) {
 	const encodedParams = new URLSearchParams();
 	encodedParams.set('source_language', 'id');
 	encodedParams.set('target_language', 'en');
 	encodedParams.set('text', text);
-	
+
 	const options = {
-	  method: 'POST',
-	  url: 'https://text-translator2.p.rapidapi.com/translate',
-	  headers: {
-		'content-type': 'application/x-www-form-urlencoded',
-		'X-RapidAPI-Key': '87f8e9a2bamsh3270a0e04c5ba53p19a277jsn222df5ba883c',
-		'X-RapidAPI-Host': 'text-translator2.p.rapidapi.com'
-	  },
-	  data: encodedParams,
+		method: 'POST',
+		url: 'https://text-translator2.p.rapidapi.com/translate',
+		headers: {
+			'content-type': 'application/x-www-form-urlencoded',
+			'X-RapidAPI-Key': '87f8e9a2bamsh3270a0e04c5ba53p19a277jsn222df5ba883c',
+			'X-RapidAPI-Host': 'text-translator2.p.rapidapi.com'
+		},
+		data: encodedParams,
 	};
-	
+
 	const name = await axios.request(options);
 	return name.data.data.translatedText;
 }
 
-async function profanityChecker(text){
+async function profanityChecker(text) {
 	const options = {
 		method: 'POST',
 		url: 'https://cyber-guardian.p.rapidapi.com/detections_r',
 		headers: {
-		  'content-type': 'application/json',
-		  'X-RapidAPI-Key': '87f8e9a2bamsh3270a0e04c5ba53p19a277jsn222df5ba883c',
-		  'X-RapidAPI-Host': 'cyber-guardian.p.rapidapi.com'
+			'content-type': 'application/json',
+			'X-RapidAPI-Key': '87f8e9a2bamsh3270a0e04c5ba53p19a277jsn222df5ba883c',
+			'X-RapidAPI-Host': 'cyber-guardian.p.rapidapi.com'
 		},
 		data: {
-		  message: {
-			msg_body: text,
-			author_id: '419130737149739008',
-			msg_id: '990922957016694798',
-			channel_id: '928990565536784497',
-			application_id: 'default',
-			timestamp: 1656317643,
-			language: 'en',
-			author_is_bot: false,
-			msg_type: 'PUBLIC_MESSAGE'
-		  },
-		  application_custom_data: {}
+			message: {
+				msg_body: text,
+				author_id: '419130737149739008',
+				msg_id: '990922957016694798',
+				channel_id: '928990565536784497',
+				application_id: 'default',
+				timestamp: 1656317643,
+				language: 'en',
+				author_is_bot: false,
+				msg_type: 'PUBLIC_MESSAGE'
+			},
+			application_custom_data: {}
 		}
-	  };
-	  const response = await axios.request(options);
-	  if (response.data.data.detection_details.resulting_categories.length===0) return false
-	  return true;
+	};
+	const response = await axios.request(options);
+	if (response.data.data.detection_details.resulting_categories.length === 0) return false
+	return true;
 }
 // => End all function
 
@@ -205,8 +205,8 @@ app.post("/api/developers/register", async (req, res) => {
 	let formatnumber = "(021)";
 	const validateData = Joi.object({
 		username: Joi.string().required().external(cek_add_user).messages({ "string.empty": "something wrong Please check again", "any.required": "Please check value" }),
-		email: Joi.string().email().required().external(cek_user_email).messages({ "string.empty": "check value", "any.required": "check value", "string.email": "Invalid email address" }),
-		password: Joi.string().required().messages({ "string.empty": "check value", "any.required": "check value" }),
+		email: Joi.string().email().required().external(cek_user_email).messages({ "string.empty": "something wrong Please check again", "any.required": "check value", "string.email": "Invalid email address" }),
+		password: Joi.string().required().messages({ "string.empty": "something wrong Please check again", "any.required": "check value" }),
 		phone: Joi.string()
 			.max(12)
 			.min(1)
@@ -894,7 +894,7 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 	}
 
 	if (thread_name) {
-		
+
 		if (await profanityChecker(await translateText(thread_name)) === true) {
 			return res.status(401).send({
 				message: "Thread_name contains offensive word",
@@ -1144,14 +1144,14 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 
 	if (!post_description && !req.file && !post_name && !action) return res.status(401).send({ message: "At least 1 field must be filled!" });
 	if (post_name == "") return res.status(401).send({ message: "Post_name cannot be empty string!" });
-	
-	if(post_name){
+
+	if (post_name) {
 		if (await profanityChecker(await translateText(post_name)) === true) return res.status(401).send({ message: "Post_name contains offensive word" });
 	}
-	if(post_description){
+	if (post_description) {
 		if (await profanityChecker(await translateText(post_description)) === true) return res.status(401).send({ message: "Post_name contains offensive word" });
 	}
-		
+
 	if (post_description) post.set({ post_description: post_description });
 	if (post_name) post.set({ post_name: post_name });
 	post.set({ user_id: user_id });
