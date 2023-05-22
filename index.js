@@ -670,12 +670,16 @@ app.delete("/api/group/:group_id", async function (req, res) {
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
+	if (cekGroup.profile_picture != "-") {
+		fs.unlinkSync(`./uploads/${group_id}.png`);
+	}
+	// fs.unlinkSync(`./uploads/${group_id}.png`);
 	await db.Groups.destroy({
 		where: {
 			group_id: group_id,
 		},
 	});
-	fs.unlinkSync(`./uploads/${group_id}.png`);
+	
 	return res.status(201).send({
 		message: `Success delete ${cekGroupId.group_name}`,
 	});
