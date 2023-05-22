@@ -126,7 +126,6 @@ async function generateThreadID() {
 
 async function bayar_api_hit(developer_id, api_hit) {
 	const tempDev = await db.Developers.findByPk(developer_id);
-
 	let temp_api_hit = parseInt(tempDev.api_hit) - parseInt(api_hit);
 
 	if (temp_api_hit < 0) {
@@ -497,7 +496,7 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
 		profile_picture = `./uploads/${group_id}.png`;
 	}
 	//API HIT 5
-	const temp = await bayar_api_hit("DEVELOPER_ID", 1);
+	const temp = await bayar_api_hit(validation_token.developer_id, 5);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
@@ -798,7 +797,7 @@ app.post("/api/thread", cekToken, async (req, res) => {
 
 	// Insert
 	//API HIT 3
-	const temp = await bayar_api_hit(validation_token.developer_id, 3);
+	const temp = await bayar_api_hit(developer_id, 3);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
@@ -956,7 +955,7 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 
 	// Updated Info
 	//API HIT 2
-	const temp = await bayar_api_hit(validation_token.developer_id, 2);
+	const temp = await bayar_api_hit(developer_id, 2);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
@@ -991,6 +990,10 @@ app.delete("/api/thread/:thread_id", cekToken, async (req, res) => {
 	}
 
 	// DELETE
+	const temp = await bayar_api_hit(developer_id, 2);
+	if (temp == false) {
+		return res.status(401).send({ messages: "Api hit is not enough!" })
+	}
 	try {
 		tempThread = await db.Threads.destroy({
 			where: {
@@ -1029,7 +1032,7 @@ app.get("/api/thread/:thread_id", cekToken, async (req, res) => {
 		});
 	}
 	//API HIT 2
-	const temp = await bayar_api_hit("DEVELOPER_ID", 1);
+	const temp = await bayar_api_hit(developer_id, 2);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
@@ -1204,12 +1207,12 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 		fs.renameSync(`./uploads/${req.file.filename}`, `./uploads/${filename}`);
 		post.set({ post_image: `./uploads/${filename}` });
 	}
-	await post.save();
-	//API HIT 3
 	const temp2 = await bayar_api_hit(validation_token.developer_id, 3);
 	if (temp2 == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
+	await post.save();
+	//API HIT 3
 	return res.status(200).send({
 		message: temp != "" ? temp : "Success",
 		post_id: post.post_id,
@@ -1244,7 +1247,7 @@ app.delete("/api/post/:post_id", async (req, res) => {
 	fs.unlinkSync(`./${post.post_image}`);
 	let name = post.post_name;
 	//API HIT 2
-	const temp = await bayar_api_hit(validation_token, 2);
+	const temp = await bayar_api_hit(validation_token.developer_id, 2);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
@@ -1269,7 +1272,7 @@ app.get("/api/post/trending", async (req, res) => {
 		return res.status(400).send({ message: "Invalid JWT Key" });
 	}
 	//API HIT 2
-	const temp = await bayar_api_hit(validation_token, 2);
+	const temp = await bayar_api_hit(validation_token.developer_id, 2);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
@@ -1304,6 +1307,10 @@ app.get("/api/post/:post_id", async (req, res) => {
 			message: "Post_id not found!",
 		});
 	}
+	const temp = await bayar_api_hit(validation_token.developer_id, 2);
+	if (temp == false) {
+		return res.status(401).send({ messages: "Api hit is not enough!" })
+	}
 	await post.increment({ views: 1 });
 	await post.reload();
 	let prevLike = JSON.parse(post.likes);
@@ -1313,10 +1320,7 @@ app.get("/api/post/:post_id", async (req, res) => {
 	if (!prevDislike) prevDislike = [];
 
 	//API HIT 2
-	const temp = await bayar_api_hit(validation_token, 2);
-	if (temp == false) {
-		return res.status(401).send({ messages: "Api hit is not enough!" })
-	}
+
 	return res.status(201).send({
 		post_id: post_id,
 		user_id: post.user_id,
@@ -1370,7 +1374,7 @@ app.post("/api/comment", async (req, res) => {
 	var fullDate = date + " " + hour;
 
 	//API HIT 2
-	const temp = await bayar_api_hit(validation_token, 2);
+	const temp = await bayar_api_hit(validation_token.developer_id, 2);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
@@ -1407,7 +1411,7 @@ app.delete("/api/comment/:comment_id", async function (req, res) {
 	let cekGroup = await db.Groups.findByPk(thread.group_id);
 	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ message: "Developer cannot delete this comment!" });
 	//API HIT 2
-	const temp = await bayar_api_hit(validation_token, 2);
+	const temp = await bayar_api_hit(validation_token.developer_id, 2);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
@@ -1508,7 +1512,7 @@ app.put("/api/comment/:comment_id", cekToken, async (req, res) => {
 
 	// Updated Data
 	//API HIT 2
-	const temp = await bayar_api_hit(validation_token.developer_id, 2);
+	const temp = await bayar_api_hit(developer_id, 2);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
