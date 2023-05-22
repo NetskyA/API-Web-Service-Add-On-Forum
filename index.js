@@ -299,7 +299,7 @@ app.post("/api/developers/topup", async (req, res) => {
 	}
 
 	if (parseInt(saldo) < 1) {
-		return res.status(404).send({ message: "Minimal " });
+		return res.status(404).send({ message: "Invalid value minimum 1" });
 	}
 	const developer = await db.Developers.findByPk(validation_token.developer_id);
 	let sum_saldo = parseInt(developer.saldo) + parseInt(saldo);
@@ -331,6 +331,9 @@ app.post("/api/developers/recharge", async (req, res) => {
 
 	if (api_hit * 5 > parseInt(developer.saldo)) {
 		return res.status(400).send({ message: "Insufficient balance amount" });
+	}
+	if (parseInt(api_hit) < 1) {
+		return res.status(404).send({ message: "Invalid value minimum 1" });
 	}
 	let sum_api_hit = parseInt(developer.api_hit) + parseInt(api_hit);
 	let count_balance = parseInt(developer.saldo) - parseInt(api_hit) * 5;
@@ -386,10 +389,10 @@ app.post("/api/developers/add/user", async (req, res) => {
 		});
 	}
 	//API HIT 2
-	// const temp = await bayar_api_hit("DEVELOPER_ID", 1);
-	// if(temp==false){
-	// 	return res.status(401).send({ messages: "Api hit is not enough!"})
-	// }
+	const temp = await bayar_api_hit(validation_token.developer_id, 2);
+	if (temp == false) {
+		return res.status(401).send({ messages: "Api hit is not enough!" })
+	}
 	await db.Group_members.create({ group_id: group_id, user_id: user_id });
 	return res.status(201).send({ message: "User joined the group", "Group Id": group_id, "User Id": user_id });
 });
