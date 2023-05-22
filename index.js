@@ -143,6 +143,55 @@ async function bayar_api_hit(developer_id, api_hit) {
 	}
 }
 
+async function translateText(text){
+	const encodedParams = new URLSearchParams();
+	encodedParams.set('source_language', 'id');
+	encodedParams.set('target_language', 'en');
+	encodedParams.set('text', text);
+	
+	const options = {
+	  method: 'POST',
+	  url: 'https://text-translator2.p.rapidapi.com/translate',
+	  headers: {
+		'content-type': 'application/x-www-form-urlencoded',
+		'X-RapidAPI-Key': '87f8e9a2bamsh3270a0e04c5ba53p19a277jsn222df5ba883c',
+		'X-RapidAPI-Host': 'text-translator2.p.rapidapi.com'
+	  },
+	  data: encodedParams,
+	};
+	
+	const name = await axios.request(options);
+	return name.data.data.translatedText;
+}
+
+async function profanityChecker(text){
+	const options = {
+		method: 'POST',
+		url: 'https://cyber-guardian.p.rapidapi.com/detections_r',
+		headers: {
+		  'content-type': 'application/json',
+		  'X-RapidAPI-Key': '87f8e9a2bamsh3270a0e04c5ba53p19a277jsn222df5ba883c',
+		  'X-RapidAPI-Host': 'cyber-guardian.p.rapidapi.com'
+		},
+		data: {
+		  message: {
+			msg_body: text,
+			author_id: '419130737149739008',
+			msg_id: '990922957016694798',
+			channel_id: '928990565536784497',
+			application_id: 'default',
+			timestamp: 1656317643,
+			language: 'en',
+			author_is_bot: false,
+			msg_type: 'PUBLIC_MESSAGE'
+		  },
+		  application_custom_data: {}
+		}
+	  };
+	  const response = await axios.request(options);
+	  if (response.data.data.detection_details.resulting_categories.length===0) return false
+	  return true;
+}
 // => End all function
 
 //Developer =========================================
@@ -424,24 +473,8 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
 		});
 	}
 
-	const options = {
-		method: "POST",
-		url: "https://openai80.p.rapidapi.com/moderations",
-		headers: {
-			"content-type": "application/json",
-			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-			"Accept-Encoding": "*",
-		},
-		data: {
-			input: [group_name, group_description],
-			model: "text-moderation-latest",
-		},
-	};
-
-	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Group_name contains offensive word" });
-	if (result.data.results[1].flagged === true) return res.status(401).send({ message: "Group_description contains offensive word" });
+	if (await profanityChecker(await translateText(group_name)) === true) return res.status(401).send({ message: "Group_name contains offensive word" });
+	if (await profanityChecker(await translateText(group_description)) === true) return res.status(401).send({ message: "Group_description contains offensive word" });
 
 	const groups = await db.Groups.findAll();
 	let group_id;
@@ -546,24 +579,8 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
 		user_id = cekGroupId.user_id;
 	}
 
-	const options = {
-		method: "POST",
-		url: "https://openai80.p.rapidapi.com/moderations",
-		headers: {
-			"content-type": "application/json",
-			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-			"Accept-Encoding": "*",
-		},
-		data: {
-			input: [group_name, group_description],
-			model: "text-moderation-latest",
-		},
-	};
-
-	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Group_name contains offensive word" });
-	if (result.data.results[1].flagged === true) return res.status(401).send({ message: "Group_description contains offensive word" });
+	if (await profanityChecker(await translateText(group_name)) === true) return res.status(401).send({ message: "Group_name contains offensive word" });
+	if (await profanityChecker(await translateText(group_description)) === true) return res.status(401).send({ message: "Group_description contains offensive word" });
 
 	let profile_picture = cekGroupId.profile_picture;
 
@@ -753,28 +770,12 @@ app.post("/api/thread", cekToken, async (req, res) => {
 		});
 	}
 
-	const options = {
-		method: "POST",
-		url: "https://openai80.p.rapidapi.com/moderations",
-		headers: {
-			"content-type": "application/json",
-			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-			"Accept-Encoding": "*",
-		},
-		data: {
-			input: [thread_name, thread_description],
-			model: "text-moderation-latest",
-		},
-	};
-
-	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) {
+	if (await profanityChecker(await translateText(thread_name)) === true) {
 		return res.status(401).send({
 			message: "Thread_name contains offensive word",
 		});
 	}
-	if (result.data.results[1].flagged === true) {
+	if (await profanityChecker(await translateText(thread_description)) === true) {
 		return res.status(401).send({
 			message: "Thread_description contains offensive word",
 		});
@@ -879,28 +880,13 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 	}
 
 	if (thread_name && thread_description) {
-		const options = {
-			method: "POST",
-			url: "https://openai80.p.rapidapi.com/moderations",
-			headers: {
-				"content-type": "application/json",
-				"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-				"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-				"Accept-Encoding": "*",
-			},
-			data: {
-				input: [thread_name, thread_description],
-				model: "text-moderation-latest",
-			},
-		};
 
-		let result = await axios.request(options);
-		if (result.data.results[0].flagged === true) {
+		if (await profanityChecker(await translateText(thread_name)) === true) {
 			return res.status(401).send({
 				message: "Thread_name contains offensive word",
 			});
 		}
-		if (result.data.results[1].flagged === true) {
+		if (await profanityChecker(await translateText(thread_description)) === true) {
 			return res.status(401).send({
 				message: "Thread_description contains offensive word",
 			});
@@ -908,22 +894,8 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 	}
 
 	if (thread_name) {
-		const options = {
-			method: "POST",
-			url: "https://openai80.p.rapidapi.com/moderations",
-			headers: {
-				"content-type": "application/json",
-				"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-				"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-				"Accept-Encoding": "*",
-			},
-			data: {
-				input: [thread_name],
-				model: "text-moderation-latest",
-			},
-		};
-		let result = await axios.request(options);
-		if (result.data.results[0].flagged === true) {
+		
+		if (await profanityChecker(await translateText(thread_name)) === true) {
 			return res.status(401).send({
 				message: "Thread_name contains offensive word",
 			});
@@ -949,22 +921,8 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 	}
 
 	if (thread_description) {
-		const options = {
-			method: "POST",
-			url: "https://openai80.p.rapidapi.com/moderations",
-			headers: {
-				"content-type": "application/json",
-				"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-				"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-				"Accept-Encoding": "*",
-			},
-			data: {
-				input: [thread_description],
-				model: "text-moderation-latest",
-			},
-		};
-		let result = await axios.request(options);
-		if (result.data.results[0].flagged === true) {
+
+		if (await profanityChecker(await translateText(thread_description)) === true) {
 			return res.status(401).send({
 				message: "Thread_description contains offensive word",
 			});
@@ -1111,6 +1069,8 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 	let jml = await db.Posts.findAndCountAll();
 	let id = "POS" + (parseInt(jml.count) + 1).toString().padStart(3, "0");
 
+	if (await profanityChecker(await translateText(post_name)) === true) return res.status(401).send({ message: "Post_name contains offensive word" });
+	if (await profanityChecker(await translateText(post_description)) === true) return res.status(401).send({ message: "Post_description contains offensive word" });
 	let file = "";
 	if (!post_description) post_description = "-";
 	if (req.file) {
@@ -1120,24 +1080,6 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 		fs.renameSync(`./uploads/${req.file.filename}`, `./uploads/${filename}`);
 		file = `./uploads/${filename}`;
 	}
-	const options = {
-		method: "POST",
-		url: "https://openai80.p.rapidapi.com/moderations",
-		headers: {
-			"content-type": "application/json",
-			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-			"Accept-Encoding": "*",
-		},
-		data: {
-			input: [post_name, post_description],
-			model: "text-moderation-latest",
-		},
-	};
-
-	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Post_name contains offensive word" });
-	if (result.data.results[1].flagged === true) return res.status(401).send({ message: "Post_description contains offensive word" });
 
 	var now = new Date();
 	var hour = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0") + ":" + now.getSeconds().toString().padStart(2, "0");
@@ -1202,31 +1144,14 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 
 	if (!post_description && !req.file && !post_name && !action) return res.status(401).send({ message: "At least 1 field must be filled!" });
 	if (post_name == "") return res.status(401).send({ message: "Post_name cannot be empty string!" });
-	cek = [];
-	if (post_description) cek.push(post_description);
-	if (post_name) cek.push(post_name);
-	if (post_name || post_description) {
-		const options = {
-			method: "POST",
-			url: "https://openai80.p.rapidapi.com/moderations",
-			headers: {
-				"content-type": "application/json",
-				"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-				"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-				"Accept-Encoding": "*",
-			},
-			data: {
-				input: cek,
-				model: "text-moderation-latest",
-			},
-		};
-
-		let result = await axios.request(options);
-		if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Post_name contains offensive word" });
-		if (result.data.results.length > 1) {
-			if (result.data.results[1].flagged === true) return res.status(401).send({ message: "Post_name contains offensive word" });
-		}
+	
+	if(post_name){
+		if (await profanityChecker(await translateText(post_name)) === true) return res.status(401).send({ message: "Post_name contains offensive word" });
 	}
+	if(post_description){
+		if (await profanityChecker(await translateText(post_description)) === true) return res.status(401).send({ message: "Post_name contains offensive word" });
+	}
+		
 	if (post_description) post.set({ post_description: post_description });
 	if (post_name) post.set({ post_name: post_name });
 	post.set({ user_id: user_id });
@@ -1429,23 +1354,8 @@ app.post("/api/comment", async (req, res) => {
 	});
 	if (!member) return res.status(404).send({ message: "User cannot create this comment!" });
 	if (!comment) return res.status(401).send({ message: "Comment cannot be empty!" });
-	const options = {
-		method: "POST",
-		url: "https://openai80.p.rapidapi.com/moderations",
-		headers: {
-			"content-type": "application/json",
-			"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-			"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-			"Accept-Encoding": "*",
-		},
-		data: {
-			input: comment,
-			model: "text-moderation-latest",
-		},
-	};
 
-	let result = await axios.request(options);
-	if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Comment contains offensive word" });
+	if (await profanityChecker(await translateText(comment)) === true) return res.status(401).send({ message: "Comment contains offensive word" });
 
 	var now = new Date();
 	var hour = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0") + ":" + now.getSeconds().toString().padStart(2, "0");
@@ -1568,23 +1478,7 @@ app.put("/api/comment/:comment_id", cekToken, async (req, res) => {
 	}
 
 	if (comment) {
-		const options = {
-			method: "POST",
-			url: "https://openai80.p.rapidapi.com/moderations",
-			headers: {
-				"content-type": "application/json",
-				"X-RapidAPI-Key": "38d0db4a95msh7e3c722a8f05d9bp1ffaa4jsn8d25fdc7988f",
-				"X-RapidAPI-Host": "openai80.p.rapidapi.com",
-				"Accept-Encoding": "*",
-			},
-			data: {
-				input: comment,
-				model: "text-moderation-latest",
-			},
-		};
-
-		let result = await axios.request(options);
-		if (result.data.results[0].flagged === true) return res.status(401).send({ message: "Comment contains offensive word" });
+		if (await profanityChecker(await translateText(comment)) === true) return res.status(401).send({ message: "Comment contains offensive word" });
 
 		try {
 			tempUser = await db.Comments.update(
