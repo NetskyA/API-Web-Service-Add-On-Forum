@@ -715,7 +715,7 @@ app.get("/api/group/:group_id", async function (req, res) {
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
-	const developer = await db.Developers.findByPk(validation_token.developer_id);
+	const developer = await db.Developers.findByPk(cekGroupId.developer_id);
 
 	return res.status(201).send({
 		group_id: group_id,
