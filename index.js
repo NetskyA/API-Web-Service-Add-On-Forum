@@ -661,7 +661,7 @@ app.delete("/api/group/:group_id", async function (req, res) {
 	});
 	if (!cekGroup) {
 		return res.status(404).send({
-			message: "Developer cannot edit this group!",
+			message: "Developer cannot delete this group!",
 		});
 	}
 	//API HIT 2
