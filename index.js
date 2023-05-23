@@ -475,6 +475,13 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
 		});
 	}
 
+	//API HIT 5
+	const temp = await bayar_api_hit(validation_token.developer_id, 5);
+	if (temp == false) {
+		fs.unlinkSync(`./uploads/${req.file.filename}`);
+		return res.status(401).send({ messages: "Api hit is not enough!" })
+	}
+
 	if (await profanityChecker(await translateText(group_name)) === true) return res.status(401).send({ message: "Group_name contains offensive word" });
 	if (await profanityChecker(await translateText(group_description)) === true) return res.status(401).send({ message: "Group_description contains offensive word" });
 
@@ -495,11 +502,7 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
 		fs.renameSync(`./uploads/${req.file.filename}`, `./uploads/${group_id}.png`);
 		profile_picture = `./uploads/${group_id}.png`;
 	}
-	//API HIT 5
-	const temp = await bayar_api_hit(validation_token.developer_id, 5);
-	if (temp == false) {
-		return res.status(401).send({ messages: "Api hit is not enough!" })
-	}
+
 	const group = await db.Groups.create({
 		group_id: group_id,
 		developer_id: validation_token.developer_id,
@@ -581,6 +584,13 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
 		user_id = cekGroupId.user_id;
 	}
 
+	//API HIT 3
+	const temp = await bayar_api_hit(validation_token.developer_id, 3);
+	if (temp == false) {
+		fs.unlinkSync(`./uploads/${req.file.filename}`);
+		return res.status(401).send({ messages: "Api hit is not enough!" })
+	}
+
 	if (await profanityChecker(await translateText(group_name)) === true) return res.status(401).send({ message: "Group_name contains offensive word" });
 	if (await profanityChecker(await translateText(group_description)) === true) return res.status(401).send({ message: "Group_description contains offensive word" });
 
@@ -593,11 +603,7 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
 		fs.renameSync(`./uploads/${req.file.filename}`, `./uploads/${group_id}.png`);
 		profile_picture = `./uploads/${group_id}.png`;
 	}
-	//API HIT 3
-	const temp = await bayar_api_hit(validation_token.developer_id, 3);
-	if (temp == false) {
-		return res.status(401).send({ messages: "Api hit is not enough!" })
-	}
+
 	const group = await db.Groups.update(
 		{
 			user_id: user_id,
@@ -1079,6 +1085,11 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 	let jml = await db.Posts.findAndCountAll();
 	let id = "POS" + (parseInt(jml.count) + 1).toString().padStart(3, "0");
 
+	const temp = await bayar_api_hit(validation_token.developer_id, 2);
+	if (temp == false) {
+		fs.unlinkSync(`./uploads/${req.file.filename}`);
+		return res.status(401).send({ messages: "Api hit is not enough!" })
+	}
 	if (await profanityChecker(await translateText(post_name)) === true) return res.status(401).send({ message: "Post_name contains offensive word" });
 	if (await profanityChecker(await translateText(post_description)) === true) return res.status(401).send({ message: "Post_description contains offensive word" });
 	let file = "";
@@ -1096,10 +1107,6 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 	var date = now.getFullYear().toString().padStart(4, "0") + "-" + (now.getMonth() + 1).toString().padStart(2, "0") + "-" + now.getDate().toString().padStart(2, "0");
 	var fullDate = date + " " + hour;
 	//API HIT 2
-	const temp = await bayar_api_hit(validation_token.developer_id, 2);
-	if (temp == false) {
-		return res.status(401).send({ messages: "Api hit is not enough!" })
-	}
 	await db.Posts.create({
 		post_id: id,
 		thread_id: thread_id,
@@ -1199,6 +1206,11 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 		likes: prevLike,
 		dislikes: prevDislike,
 	});
+	const temp2 = await bayar_api_hit(validation_token.developer_id, 3);
+	if (temp2 == false) {
+		fs.unlinkSync(`./uploads/${req.file.filename}`);
+		return res.status(401).send({ messages: "Api hit is not enough!" })
+	}
 	if (req.file) {
 		if (post.post_image != "") fs.unlinkSync(`./${post.post_image}`);
 		let temp = req.file.originalname.split(".");
@@ -1206,10 +1218,6 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 		const filename = `${post.post_id}.${oldExt}`;
 		fs.renameSync(`./uploads/${req.file.filename}`, `./uploads/${filename}`);
 		post.set({ post_image: `./uploads/${filename}` });
-	}
-	const temp2 = await bayar_api_hit(validation_token.developer_id, 3);
-	if (temp2 == false) {
-		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
 	await post.save();
 	//API HIT 3
@@ -1244,13 +1252,15 @@ app.delete("/api/post/:post_id", async (req, res) => {
 	let thread = await db.Threads.findByPk(post.thread_id);
 	let cekGroup = await db.Groups.findByPk(thread.group_id);
 	if (cekGroup.developer_id !== validation_token.developer_id) return res.status(404).send({ message: "Developer cannot delete this post!" });
-	fs.unlinkSync(`./${post.post_image}`);
-	let name = post.post_name;
-	//API HIT 2
+	
 	const temp = await bayar_api_hit(validation_token.developer_id, 2);
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
+	
+	if(post.post_image!=="") fs.unlinkSync(`./${post.post_image}`);
+	let name = post.post_name;
+	//API HIT 2
 	await db.Posts.destroy({
 		where: {
 			post_id: post_id,
