@@ -1267,7 +1267,7 @@ app.delete("/api/post/:post_id", async (req, res) => {
 			post_id: post_id,
 		},
 	});
-	return res.status(201).send({
+	return res.status(200).send({
 		message: `Success delete ${name}`,
 	});
 });
@@ -1332,7 +1332,7 @@ app.get("/api/post/:post_id", async (req, res) => {
 
 	//API HIT 2
 
-	return res.status(201).send({
+	return res.status(200).send({
 		post_id: post_id,
 		user_id: post.user_id, 
 		post_name: post.post_name,
