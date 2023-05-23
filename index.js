@@ -478,7 +478,7 @@ app.post("/api/group", uploadImage.single("profile_picture"), async function (re
 	//API HIT 5
 	const temp = await bayar_api_hit(validation_token.developer_id, 5);
 	if (temp == false) {
-		fs.unlinkSync(`./uploads/${req.file.filename}`);
+		if(req.file) fs.unlinkSync(`./uploads/${req.file.filename}`);
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
 
@@ -587,7 +587,7 @@ app.put("/api/group/:group_id", uploadImage.single("profile_picture"), async fun
 	//API HIT 3
 	const temp = await bayar_api_hit(validation_token.developer_id, 3);
 	if (temp == false) {
-		fs.unlinkSync(`./uploads/${req.file.filename}`);
+		if(req.file) fs.unlinkSync(`./uploads/${req.file.filename}`);
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
 
@@ -782,6 +782,12 @@ app.post("/api/thread", cekToken, async (req, res) => {
 		});
 	}
 
+	//API HIT 3
+	const temp = await bayar_api_hit(developer_id, 3);
+	if (temp == false) {
+		return res.status(401).send({ messages: "Api hit is not enough!" })
+	}
+
 	if (await profanityChecker(await translateText(thread_name)) === true) {
 		return res.status(401).send({
 			message: "Thread_name contains offensive word",
@@ -802,11 +808,6 @@ app.post("/api/thread", cekToken, async (req, res) => {
 	let newID = await generateThreadID();
 
 	// Insert
-	//API HIT 3
-	const temp = await bayar_api_hit(developer_id, 3);
-	if (temp == false) {
-		return res.status(401).send({ messages: "Api hit is not enough!" })
-	}
 	try {
 		thread = await db.Threads.create({
 			thread_id: newID,
@@ -890,6 +891,11 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 			});
 		}
 	}
+		//API HIT 2
+	const temp = await bayar_api_hit(developer_id, 2);
+	if (temp == false) {
+		return res.status(401).send({ messages: "Api hit is not enough!" })
+	}
 
 	if (thread_name && thread_description) {
 
@@ -960,11 +966,6 @@ app.put("/api/thread/:thread_id", cekToken, async (req, res) => {
 	}
 
 	// Updated Info
-	//API HIT 2
-	const temp = await bayar_api_hit(developer_id, 2);
-	if (temp == false) {
-		return res.status(401).send({ messages: "Api hit is not enough!" })
-	}
 	thread = await db.Threads.findByPk(thread_id);
 
 	return res.status(201).send({
@@ -1087,7 +1088,7 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 
 	const temp = await bayar_api_hit(validation_token.developer_id, 2);
 	if (temp == false) {
-		fs.unlinkSync(`./uploads/${req.file.filename}`);
+		if(req.file) fs.unlinkSync(`./uploads/${req.file.filename}`);
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
 	if (await profanityChecker(await translateText(post_name)) === true) return res.status(401).send({ message: "Post_name contains offensive word" });
@@ -1166,7 +1167,7 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 		if (await profanityChecker(await translateText(post_name)) === true) return res.status(401).send({ message: "Post_name contains offensive word" });
 	}
 	if (post_description) {
-		if (await profanityChecker(await translateText(post_description)) === true) return res.status(401).send({ message: "Post_name contains offensive word" });
+		if (await profanityChecker(await translateText(post_description)) === true) return res.status(401).send({ message: "Post_description contains offensive word" });
 	}
 
 	if (post_description) post.set({ post_description: post_description });
@@ -1208,7 +1209,7 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 	});
 	const temp2 = await bayar_api_hit(validation_token.developer_id, 3);
 	if (temp2 == false) {
-		fs.unlinkSync(`./uploads/${req.file.filename}`);
+		if(req.file) fs.unlinkSync(`./uploads/${req.file.filename}`);
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
 	if (req.file) {
@@ -1257,7 +1258,7 @@ app.delete("/api/post/:post_id", async (req, res) => {
 	if (temp == false) {
 		return res.status(401).send({ messages: "Api hit is not enough!" })
 	}
-	
+
 	if(post.post_image!=="") fs.unlinkSync(`./${post.post_image}`);
 	let name = post.post_name;
 	//API HIT 2
