@@ -1150,7 +1150,7 @@ app.put("/api/post/:post_id", uploadFile.single("post_file"), async (req, res) =
 			user_id: user_id,
 		},
 	});
-	if (!member) return res.status(404).send({ message: "User cannot create this post!" });
+	if (!member) return res.status(404).send({ message: "User cannot edit this post!" });
 
 	if (!post_description && !req.file && !post_name && !action) return res.status(401).send({ message: "At least 1 field must be filled!" });
 	if (post_name == "") return res.status(401).send({ message: "Post_name cannot be empty string!" });
@@ -1323,7 +1323,7 @@ app.get("/api/post/:post_id", async (req, res) => {
 
 	return res.status(201).send({
 		post_id: post_id,
-		user_id: post.user_id,
+		user_id: post.user_id, 
 		post_name: post.post_name,
 		group_description: post.post_description,
 		link_post_file: post.post_image,
