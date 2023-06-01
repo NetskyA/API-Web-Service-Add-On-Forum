@@ -325,7 +325,7 @@ app.post("/api/developers/topup", async (req, res) => {
   let { saldo } = req.body;
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -362,7 +362,7 @@ app.post("/api/developers/recharge", async (req, res) => {
   let { api_hit } = req.body;
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -404,7 +404,7 @@ app.post("/api/developers/add/user", async (req, res) => {
   let { group_id, user_id } = req.body;
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -470,7 +470,7 @@ app.get("/api/developers/groupuser/:group_id", async function (req, res) {
   const { group_id } = req.params;
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -523,7 +523,7 @@ app.post(
 
     let token = req.header("x-auth-token");
     if (!req.header("x-auth-token")) {
-      return res.status(400).send({ message: "Authentication required" });
+      return res.status(403).send({ message: "Authentication required" });
     }
     try {
       validation_token = jwt.verify(token, JWT_KEY);
@@ -637,7 +637,7 @@ app.put(
 
     let token = req.header("x-auth-token");
     if (!req.header("x-auth-token")) {
-      return res.status(400).send({ message: "Authentication required" });
+      return res.status(403).send({ message: "Authentication required" });
     }
     try {
       validation_token = jwt.verify(token, JWT_KEY);
@@ -755,7 +755,7 @@ app.delete("/api/group/:group_id", async function (req, res) {
 
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -814,7 +814,7 @@ app.get("/api/group/:group_id", async function (req, res) {
 
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -1190,7 +1190,7 @@ app.post("/api/post", uploadFile.single("post_file"), async (req, res) => {
 
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -1301,7 +1301,7 @@ app.put(
     let { post_id } = req.params;
     let token = req.header("x-auth-token");
     if (!req.header("x-auth-token")) {
-      return res.status(400).send({ message: "Authentication required" });
+      return res.status(403).send({ message: "Authentication required" });
     }
     try {
       validation_token = jwt.verify(token, JWT_KEY);
@@ -1425,7 +1425,7 @@ app.delete("/api/post/:post_id", async (req, res) => {
   let { post_id } = req.params;
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -1466,7 +1466,7 @@ app.delete("/api/post/:post_id", async (req, res) => {
 app.get("/api/post/trending", async (req, res) => {
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -1489,7 +1489,7 @@ app.get("/api/post/:post_id", async (req, res) => {
 
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -1544,7 +1544,7 @@ app.post("/api/comment", async (req, res) => {
 
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
@@ -1619,7 +1619,7 @@ app.delete("/api/comment/:comment_id", async function (req, res) {
 
   let token = req.header("x-auth-token");
   if (!req.header("x-auth-token")) {
-    return res.status(400).send({ message: "Authentication required" });
+    return res.status(403).send({ message: "Authentication required" });
   }
   try {
     validation_token = jwt.verify(token, JWT_KEY);
