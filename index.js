@@ -1159,7 +1159,7 @@ app.get("/api/thread/:thread_id", cekToken, async (req, res) => {
 
   let thread = await db.Threads.findByPk(thread_id);
   if (!thread) {
-    return res.status(400).send({
+    return res.status(404).send({
       message: "Thread not found!",
     });
   }
@@ -1360,7 +1360,7 @@ app.put(
     post.set({ user_id: user_id });
 
     if (action && action != "like" && action != "dislike")
-      return res.status(401).send({ message: "Invalid Action" });
+      return res.status(400).send({ message: "Invalid Action" });
     let prevLike = JSON.parse(post.likes);
     if (!prevLike) prevLike = [];
 
