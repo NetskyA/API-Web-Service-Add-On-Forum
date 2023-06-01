@@ -1,0 +1,52 @@
+Link source code : 
+https://github.com/NetskyA/PROYEK_WS.git
+
+Database (file sql):
+......
+
+API documentation : 
+https://documenter.getpostman.com/view/27150893/2s93m343nd
+
+Automated testing : 
+Terlampir
+
+Url hosting : 
+......
+
+
+Pembagian tugas : 
+Aldi A. : 
+[POST] /api/developers/register
+[POST] /api/developers/login
+[POST] /api/developers/topup
+[POST] /api/developers/recharge
+[POST] /api/developers/add/user
+	
+Darrel Fiko : 
+[GET] /api/developers/groupuser/:group_id
+[POST] /api/group
+[PUT] /api/group/:group_id
+[DELETE] /api/group/:group_id
+[GET] /api/group/:group_id
+[DELETE] /api/comment/:comment_id
+
+Geovann : 
+[POST] /api/thread
+[PUT] /api/thread/:thread_id
+[DELETE] /api/thread/:thread_id
+[GET] /api/thread/:thread_id
+[PUT] /api/comment/:comment_id 
+
+Alvin : 
+[POST] /api/post
+[PUT] /api/post/:post_id
+[DELETE] /api/post/:post_id
+[GET] /api/post/trending
+[GET] /api/post/:post_id
+[POST] /api/comment
+
+
+
+
+
+
