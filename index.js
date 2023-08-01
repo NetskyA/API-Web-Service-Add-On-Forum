@@ -520,7 +520,6 @@ app.post(
   uploadImage.single("profile_picture"),
   async function (req, res) {
     let { group_name, group_description, user_id } = req.body;
-
     let token = req.header("x-auth-token");
     if (!req.header("x-auth-token")) {
       return res.status(403).send({ message: "Authentication required" });
